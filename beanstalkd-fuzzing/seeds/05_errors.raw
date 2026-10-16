@@ -1,0 +1,12 @@
+foo
+put a b c d
+put 0 0 1 3
+abcde
+delete 999
+use xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+release 1
+watch
+reserve-with-timeout x
+put 0 0 60 15
+ok-after-errors
+quit

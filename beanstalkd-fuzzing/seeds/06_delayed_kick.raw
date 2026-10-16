@@ -1,0 +1,14 @@
+put 0 50 60 2
+d1
+put 0 60 60 2
+d2
+stats-job 1
+peek-delayed
+kick-job 2
+kick 10
+reserve-with-timeout 0
+release 1 0 30
+stats-tube default
+peek-delayed
+delete 1
+delete 2

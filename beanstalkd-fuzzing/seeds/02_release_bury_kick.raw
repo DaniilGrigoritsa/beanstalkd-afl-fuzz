@@ -1,0 +1,12 @@
+put 5 0 60 5
+job-a
+put 1 0 60 5
+job-b
+reserve-with-timeout 0
+touch 2
+release 2 10 0
+reserve-with-timeout 0
+bury 1 3
+kick 5
+reserve-job 1
+delete 1

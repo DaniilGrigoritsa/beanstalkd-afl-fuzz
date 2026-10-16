@@ -1,0 +1,12 @@
+put 0 0 0 2
+t1
+reserve-with-timeout 0
+reserve-with-timeout 0
+touch 1
+stats-job 1
+release 1 0 0
+put 0 0 0 2
+t2
+reserve-job 2
+bury 2 1
+stats

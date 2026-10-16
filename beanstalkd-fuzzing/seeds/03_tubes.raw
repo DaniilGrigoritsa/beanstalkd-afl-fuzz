@@ -1,0 +1,11 @@
+use emails
+put 0 0 60 6
+mail-1
+watch emails
+ignore default
+reserve-with-timeout 0
+pause-tube emails 1
+list-tubes
+list-tube-used
+list-tubes-watched
+delete 1

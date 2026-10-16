@@ -1,0 +1,54 @@
+diff --git a/main.c b/main.c
+index 20277ff..a579a95 100644
+--- a/main.c
++++ b/main.c
+@@ -109,6 +109,14 @@ main(int argc, char **argv)
+     set_sig_handlers();
+ 
+     srv_acquire_wal(&srv);
++
++#ifdef __AFL_HAVE_MANUAL_CONTROL
++    // Fuzzing build: start the AFL fork server only now, when the listening
++    // socket is already bound. Every forked child inherits a ready socket, so
++    // the fuzzer can connect at once and the startup code is not re-executed.
++    __AFL_INIT();
++#endif
++
+     srvserve(&srv);
+     exit(0);
+ }
+diff --git a/prot.c b/prot.c
+index 297e772..f2909d0 100644
+--- a/prot.c
++++ b/prot.c
+@@ -1838,6 +1838,15 @@ dispatch_cmd(Conn *c)
+         }
+ 
+         t->unpause_at = nanoseconds() + delay;
++#ifdef FUZZ_DETERMINISTIC
++        // Fuzzing build: a 1 ns pause is shorter than the clock resolution
++        // (gettimeofday, 1 us), so whether the next prottick() still sees it
++        // running depends on whether the clock has ticked in between. Always
++        // take the "already expired" outcome: the tube stays paused until the
++        // next prottick(), which unpauses it and wakes waiting clients.
++        if (delay == 1)
++            t->unpause_at = nanoseconds();
++#endif
+         t->pause = delay;
+         t->stat.pause_ct++;
+ 
+@@ -2127,6 +2136,14 @@ h_conn(const int fd, const short which, Conn *c)
+     if (c->state == STATE_CLOSE) {
+         epollq_rmconn(c);
+         connclose(c);
++#ifdef FUZZ_EXIT_ON_CLOSE
++        // Fuzzing build: one test case = one client session. Exit as soon as
++        // the session is over instead of waiting for SIGTERM from the fuzzer,
++        // so every run ends at the same point (deterministic coverage) and
++        // no time is wasted.
++        if (count_cur_conns() == 0)
++            exit(0);
++#endif
+     }
+     epollq_apply();
+ }

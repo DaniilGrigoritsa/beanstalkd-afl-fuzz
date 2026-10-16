@@ -1,0 +1,5 @@
+Reading tracefile cov/cov-single/coverage.info
+Summary coverage rate:
+  lines......: 61.3% (1512 of 2468 lines)
+  functions..: 75.1% (136 of 181 functions)
+  branches...: 56.6% (724 of 1279 branches)

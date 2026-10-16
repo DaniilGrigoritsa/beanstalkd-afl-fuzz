@@ -1,0 +1,20 @@
+use a
+put 0 0 60 4
+in-a
+use b
+put 1 0 60 4
+in-b
+watch a
+watch b
+pause-tube a 0
+reserve-with-timeout 0
+ignore default
+ignore a
+ignore b
+stats-tube a
+stats-tube b
+list-tubes
+bury 1 0
+use a
+kick 1
+stats-job 1

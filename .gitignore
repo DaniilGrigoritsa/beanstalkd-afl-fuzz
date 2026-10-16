@@ -1,0 +1,12 @@
+/aflnet/
+/AFLplusplus/
+/beanstalkd/
+/beanstalkd-afl/
+/beanstalkd-gcov/
+/tools/
+
+*.so
+/beanstalkd-fuzzing/mutator/test_mutator
+/targets/
+
+/out/*/

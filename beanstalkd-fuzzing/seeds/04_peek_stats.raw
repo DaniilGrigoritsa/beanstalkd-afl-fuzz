@@ -1,0 +1,17 @@
+put 0 0 60 1
+x
+put 0 100 60 1
+y
+put 0 0 60 1
+z
+peek 1
+peek-ready
+peek-delayed
+peek-buried
+reserve-with-timeout 0
+bury 1 0
+peek-buried
+kick-job 1
+stats-job 1
+stats-tube default
+stats

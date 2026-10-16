@@ -1,0 +1,5 @@
+Reading tracefile cov/cmp-custom/coverage.info
+Summary coverage rate:
+  lines......: 61.3% (1515 of 2470 lines)
+  functions..: 75.1% (136 of 181 functions)
+  branches...: 57.0% (730 of 1281 branches)

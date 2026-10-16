@@ -1,0 +1,669 @@
+diff --git a/afl-fuzz.c b/afl-fuzz.c
+index 93b3548..5446175 100644
+--- a/afl-fuzz.c
++++ b/afl-fuzz.c
+@@ -55,6 +55,7 @@
+ #include <fcntl.h>
+ #include <termios.h>
+ #include <dlfcn.h>
++#include <netinet/tcp.h>
+ #include <sched.h>
+ 
+ #include <sys/wait.h>
+@@ -69,6 +70,7 @@
+ #include <sys/capability.h>
+ 
+ #include "aflnet.h"
++#include <dlfcn.h>
+ #include <graphviz/gvc.h>
+ #include <math.h>
+ 
+@@ -378,6 +380,14 @@ char **was_fuzzed_map = NULL; /* A 2D array keeping state-specific was_fuzzed in
+ u32 fuzzed_map_states = 0;
+ u32 fuzzed_map_qentries = 0;
+ u32 max_seed_region_count = 0;
++u32 max_session_len = 0;               /* AFLNET_MAX_LEN: max bytes per test case (0 = no limit) */
++/* Custom mutator (AFL++ API subset), loaded from AFL_CUSTOM_MUTATOR_LIBRARY */
++static void *cm_data;
++static size_t (*cm_fuzz)(void *data, u8 *buf, size_t buf_size, u8 **out_buf,
++                         u8 *add_buf, size_t add_buf_size, size_t max_size);
++static void (*cm_deinit)(void *data);
++static u32 cm_prob = 50;                /* AFL_CUSTOM_MUTATOR_PROB: % of havoc iterations */
++static u64 cm_execs, cm_finds;          /* executions / new paths from custom mutations */               /* AFLNET_MAX_LEN: max bytes per test case (0 = no limit) */
+ u32 local_port;		/* TCP/UDP port number to use as source */
+ u32 *state_sequence = NULL; /* State sequence received from the server */
+ u32 state_count = 0; /* Number of states in the state sequence */ 
+@@ -1024,6 +1034,13 @@ int send_over_network()
+   timeout.tv_usec = socket_timeout_usecs;
+   setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout, sizeof(timeout));
+ 
++  //Send every message at once: with Nagle's algorithm a small message that follows one the
++  //server has not answered (or ACKed) yet is held back until the delayed ACK (~40 ms)
++  if (net_protocol == PRO_TCP) {
++    int one = 1;
++    setsockopt(sockfd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(one));
++  }
++
+   memset(&serv_addr, '0', sizeof(serv_addr));
+ 
+   serv_addr.sin_family = AF_INET;
+@@ -1058,12 +1075,25 @@ int send_over_network()
+   }
+ 
+   //retrieve early server response if needed
+-  if (net_recv(sockfd, timeout, poll_wait_msecs, &response_buf, &response_buf_size)) goto HANDLE_RESPONSES;
++  //(set AFLNET_SKIP_EARLY_RECV=1 for servers that never send a greeting: saves -W msec per execution)
++  if (!getenv("AFLNET_SKIP_EARLY_RECV") &&
++      net_recv(sockfd, timeout, poll_wait_msecs, &response_buf, &response_buf_size)) goto HANDLE_RESPONSES;
+ 
+   //write the request messages
+   kliter_t(lms) *it;
+   messages_sent = 0;
+ 
++  net_replies_complete = 0;
++
++  //all bytes sent in this session: protocols with reply-counting hooks model the server's
++  //framing over the whole stream (e.g. a message can be swallowed as the body of an earlier one)
++  static u8 *sent_buf = NULL;
++  u32 sent_len = 0, sent_parse_pos = 0;
++  net_expected_replies = net_received_replies = net_reply_parse_pos = 0;
++  //set once an expected reply did not come within -W msec: the server is blocked (e.g. beanstalkd
++  //"reserve" with no ready job) and will not answer later messages either, so stop waiting
++  u8 server_stalled = 0;
++
+   for (it = kl_begin(kl_messages); it != kl_end(kl_messages); it = kl_next(it)) {
+     n = net_send(sockfd, timeout, kl_val(it)->mdata, kl_val(it)->msize);
+     messages_sent++;
+@@ -1078,9 +1108,51 @@ int send_over_network()
+ 
+     //retrieve server response
+     u32 prev_buf_size = response_buf_size;
++    if (count_expected_replies && count_complete_replies) {
++      sent_buf = ck_realloc(sent_buf, sent_len + kl_val(it)->msize);
++      memcpy(sent_buf + sent_len, kl_val(it)->mdata, kl_val(it)->msize);
++      sent_len += kl_val(it)->msize;
++      net_expected_replies += count_expected_replies(sent_buf, sent_len, &sent_parse_pos);
++      net_received_replies += count_complete_replies((u8 *)response_buf, response_buf_size, &net_reply_parse_pos);
++      if (net_expected_replies <= net_received_replies || server_stalled) {
++        //the server owes us nothing for this message (it is still incomplete or was
++        //consumed as data of an earlier command): do not wait for a reply
++        net_replies_complete = 1;
++        response_bytes[messages_sent - 1] = response_buf_size;
++        likely_buggy = 0;
++        continue;
++      }
++    }
+     if (net_recv(sockfd, timeout, poll_wait_msecs, &response_buf, &response_buf_size)) {
+       goto HANDLE_RESPONSES;
+     }
++    if (count_expected_replies && count_complete_replies && !net_replies_complete) {
++      server_stalled = 1;
++      //AFLNET_DEBUG_DIR: save sessions in which an expected reply did not come within -W msec
++      static u32 stall_dumps = 0;
++      if (getenv("AFLNET_DEBUG_DIR") && stall_dumps < 2000) {
++        u8 *fn = alloc_printf("%s/stall-%05u-exp%u-got%u.req", getenv("AFLNET_DEBUG_DIR"), stall_dumps,
++                              net_expected_replies, net_received_replies);
++        int fd = open(fn, O_WRONLY | O_CREAT | O_TRUNC, 0600);
++        if (fd >= 0) { ck_write(fd, sent_buf, sent_len, fn); close(fd); }
++        fn[strlen(fn) - 3] = 0;
++        u8 *fn2 = alloc_printf("%sresp", fn);
++        fd = open(fn2, O_WRONLY | O_CREAT | O_TRUNC, 0600);
++        if (fd >= 0) { if (response_buf_size) ck_write(fd, response_buf, response_buf_size, fn2); close(fd); }
++        ck_free(fn2);
++        fn2 = alloc_printf("%smsgs", fn); //sizes of the messages sent so far
++        FILE *mf = fopen(fn2, "w");
++        if (mf) {
++          kliter_t(lms) *mit;
++          for (mit = kl_begin(kl_messages); mit != kl_next(it); mit = kl_next(mit))
++            fprintf(mf, "%u\n", kl_val(mit)->msize);
++          fclose(mf);
++        }
++        ck_free(fn2);
++        ck_free(fn);
++        stall_dumps++;
++      }
++    }
+ 
+     //Update accumulated response buffer size
+     response_bytes[messages_sent - 1] = response_buf_size;
+@@ -1093,7 +1165,11 @@ int send_over_network()
+ 
+ HANDLE_RESPONSES:
+ 
+-  net_recv(sockfd, timeout, poll_wait_msecs, &response_buf, &response_buf_size);
++  //the last message has been answered completely: nothing more to wait for
++  if (!net_replies_complete) {
++    net_expected_replies = 0; //just collect whatever is left
++    net_recv(sockfd, timeout, poll_wait_msecs, &response_buf, &response_buf_size);
++  }
+ 
+   if (messages_sent > 0 && response_bytes != NULL) {
+     response_bytes[messages_sent - 1] = response_buf_size;
+@@ -1111,11 +1187,9 @@ HANDLE_RESPONSES:
+ 
+   if (terminate_child && (child_pid > 0)) kill(child_pid, SIGTERM);
+ 
+-  //give the server a bit more time to gracefully terminate
+-  while(1) {
+-    int status = kill(child_pid, 0);
+-    if ((status != 0) && (errno == ESRCH)) break;
+-  }
++  //No busy-wait for the server to terminate here: run_target() blocks on the fork server
++  //status pipe (or waitpid()) right after we return, which is enough, and spinning on
++  //kill(child_pid, 0) only steals CPU from the server that runs on the same core.
+ 
+   return 0;
+ }
+@@ -4314,7 +4388,9 @@ static void write_stats_file(double bitmap_cvg, double stability, double eps) {
+              "afl_version       : " VERSION "\n"
+              "target_mode       : %s%s%s%s%s%s%s\n"
+              "command_line      : %s\n"
+-             "slowest_exec_ms   : %llu\n",
++             "slowest_exec_ms   : %llu\n"
++             "custom_execs      : %llu\n"
++             "custom_finds      : %llu\n",
+              start_time / 1000, get_cur_time() / 1000, getpid(),
+              queue_cycle ? (queue_cycle - 1) : 0, total_execs, eps,
+              queued_paths, queued_favored, queued_discovered, queued_imported,
+@@ -4328,7 +4404,7 @@ static void write_stats_file(double bitmap_cvg, double stability, double eps) {
+              persistent_mode ? "persistent " : "", deferred_mode ? "deferred " : "",
+              (qemu_mode || dumb_mode || no_forkserver || crash_mode ||
+               persistent_mode || deferred_mode) ? "" : "default",
+-             orig_cmdline, slowest_exec_ms);
++             orig_cmdline, slowest_exec_ms, cm_execs, cm_finds);
+              /* ignore errors */
+ 
+   /* Get rss value from the children
+@@ -5483,6 +5559,17 @@ EXP_ST u8 common_fuzz_stuff(char** argv, u8* out_buf, u32 len) {
+     next_it = kl_next(next_it);
+   } while(cur_it != M2_next);
+ 
++  /* Skip test cases that grew beyond AFLNET_MAX_LEN bytes (like AFL++'s -G): region-level
++     havoc keeps duplicating/inserting messages, and huge sessions with thousands of messages
++     cost a network round trip each without exploring anything new */
++  if (max_session_len) {
++    u32 total_len = 0;
++    kliter_t(lms) *it;
++    for (it = kl_begin(kl_messages); it != kl_end(kl_messages); it = kl_next(it))
++      total_len += kl_val(it)->msize;
++    if (total_len > max_session_len) return 0;
++  }
++
+   /* End of AFLNet code */
+ 
+   fault = run_target(argv, exec_tmout);
+@@ -7023,10 +7110,29 @@ havoc_stage:
+   for (stage_cur = 0; stage_cur < stage_max; stage_cur++) {
+ 
+     u32 use_stacking = 1 << (1 + UR(HAVOC_STACK_POW2));
++    u8 used_custom = 0;
++    u32 paths_before = queued_paths;
+ 
+     stage_cur_val = use_stacking;
+ 
+-    for (i = 0; i < use_stacking; i++) {
++    if (cm_fuzz && UR(100) < cm_prob) {
++
++      /* Structure-aware mutation of the whole M2 buffer instead of stacked byte tweaks.
++         Sometimes give it a region of another seed to splice commands from. */
++      u32 add_len = 0;
++      u8 *add_buf = UR(4) ? NULL : choose_source_region(&add_len);
++      u8 *mutated = NULL;
++      size_t mutated_len = cm_fuzz(cm_data, out_buf, temp_len, &mutated,
++                                   add_buf, add_len, MAX_FILE);
++      if (add_buf) ck_free(add_buf);
++      if (mutated && mutated_len) {
++        out_buf = ck_realloc(out_buf, mutated_len);
++        memcpy(out_buf, mutated, mutated_len);
++        temp_len = mutated_len;
++      }
++      used_custom = 1;
++
++    } else for (i = 0; i < use_stacking; i++) {
+ 
+       switch (UR(15 + 2 + (region_level_mutation ? 4 : 0))) {
+ 
+@@ -7483,6 +7589,11 @@ havoc_stage:
+     if (common_fuzz_stuff(argv, out_buf, temp_len))
+       goto abandon_entry;
+ 
++    if (used_custom) {
++      cm_execs++;
++      cm_finds += queued_paths - paths_before;
++    }
++
+     /* out_buf might have been mangled a bit, so let's restore it to its
+        original size and shape. */
+ 
+@@ -9043,7 +9154,12 @@ int main(int argc, char** argv) {
+       case 'P': /* protocol to be tested */
+         if (protocol_selected) FATAL("Multiple -P options not supported");
+ 
+-        if (!strcmp(optarg, "RTSP")) {
++        if (!strcmp(optarg, "BEANSTALKD")) {
++          extract_requests = &extract_requests_beanstalkd;
++          extract_response_codes = &extract_response_codes_beanstalkd;
++          count_expected_replies = &count_expected_replies_beanstalkd;
++          count_complete_replies = &count_complete_replies_beanstalkd;
++        } else if (!strcmp(optarg, "RTSP")) {
+           extract_requests = &extract_requests_rtsp;
+           extract_response_codes = &extract_response_codes_rtsp;
+         } else if (!strcmp(optarg, "FTP")) {
+@@ -9197,6 +9313,7 @@ int main(int argc, char** argv) {
+   if (getenv("AFL_NO_FORKSRV"))    no_forkserver    = 1;
+   if (getenv("AFL_NO_CPU_RED"))    no_cpu_meter_red = 1;
+   if (getenv("AFL_NO_ARITH"))      no_arith         = 1;
++  if (getenv("AFLNET_MAX_LEN"))    max_session_len  = atoi(getenv("AFLNET_MAX_LEN"));
+   if (getenv("AFL_SHUFFLE_QUEUE")) shuffle_queue    = 1;
+   if (getenv("AFL_FAST_CAL"))      fast_cal         = 1;
+ 
+@@ -9262,6 +9379,20 @@ int main(int argc, char** argv) {
+   else
+     use_argv = argv + optind;
+ 
++  if (getenv("AFL_CUSTOM_MUTATOR_LIBRARY")) {
++    void *(*cm_init)(void *afl, unsigned int seed);
++    void *lib = dlopen(getenv("AFL_CUSTOM_MUTATOR_LIBRARY"), RTLD_NOW);
++    if (!lib) FATAL("Unable to load custom mutator: %s", dlerror());
++    cm_init = dlsym(lib, "afl_custom_init");
++    cm_fuzz = dlsym(lib, "afl_custom_fuzz");
++    cm_deinit = dlsym(lib, "afl_custom_deinit");
++    if (!cm_init || !cm_fuzz) FATAL("Custom mutator must export afl_custom_init and afl_custom_fuzz");
++    if (getenv("AFL_CUSTOM_MUTATOR_PROB")) cm_prob = atoi(getenv("AFL_CUSTOM_MUTATOR_PROB"));
++    cm_data = cm_init(NULL, UR(0xffffffff));
++    OKF("Loaded custom mutator '%s' (used in %u%% of havoc iterations).",
++        getenv("AFL_CUSTOM_MUTATOR_LIBRARY"), cm_prob);
++  }
++
+   perform_dry_run(use_argv);
+ 
+   cull_queue();
+@@ -9554,6 +9685,7 @@ stop_fuzzing:
+   }
+ 
+   fclose(plot_file);
++  if (cm_deinit) cm_deinit(cm_data);
+   destroy_queue();
+   destroy_extras();
+   ck_free(target_path);
+diff --git a/aflnet-replay.c b/aflnet-replay.c
+index 428fb90..44cac9b 100644
+--- a/aflnet-replay.c
++++ b/aflnet-replay.c
+@@ -40,7 +40,8 @@ int main(int argc, char* argv[])
+     exit(1);
+   }
+   
+-  if (!strcmp(argv[2], "RTSP")) extract_response_codes = &extract_response_codes_rtsp;
++  if (!strcmp(argv[2], "BEANSTALKD")) extract_response_codes = &extract_response_codes_beanstalkd;
++  else if (!strcmp(argv[2], "RTSP")) extract_response_codes = &extract_response_codes_rtsp;
+   else if (!strcmp(argv[2], "FTP")) extract_response_codes = &extract_response_codes_ftp;
+   else if (!strcmp(argv[2], "MQTT")) extract_response_codes = &extract_response_codes_mqtt;
+   else if (!strcmp(argv[2], "DNS")) extract_response_codes = &extract_response_codes_dns;
+diff --git a/aflnet.c b/aflnet.c
+index 4c21ead..6b2c0be 100644
+--- a/aflnet.c
++++ b/aflnet.c
+@@ -1,4 +1,5 @@
+ #include <ctype.h>
++#include <limits.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+@@ -26,6 +27,7 @@ void destroy_message_code_map(){
+ 
+ u32 get_mapped_message_code (u32 ori_message_code){
+   u32 mapped_message_code = 0;
++  if (!message_code_map) init_message_code_map(); /* aflnet-replay never initializes it */
+   khiter_t k = kh_get(32, message_code_map, ori_message_code);
+   if (k == kh_end(message_code_map)) {
+     int ret;
+@@ -2550,7 +2552,6 @@ int net_send(int sockfd, struct timeval timeout, char *mem, unsigned int len) {
+   if (rv > 0) {
+     if (pfd[0].revents & POLLOUT) {
+       while (byte_count < len) {
+-        usleep(10);
+         n = send(sockfd, &mem[byte_count], len - byte_count, MSG_NOSIGNAL);
+         if (n == 0) return byte_count;
+         if (n == -1) return -1;
+@@ -2561,9 +2562,17 @@ int net_send(int sockfd, struct timeval timeout, char *mem, unsigned int len) {
+   return byte_count;
+ }
+ 
++unsigned int (*count_expected_replies)(unsigned char* buf, unsigned int buf_size, unsigned int *pos) = NULL;
++unsigned int (*count_complete_replies)(unsigned char* buf, unsigned int buf_size, unsigned int *pos) = NULL;
++unsigned int net_expected_replies = 0;
++unsigned int net_received_replies = 0;
++unsigned int net_reply_parse_pos = 0;
++unsigned char net_replies_complete = 0;
++
+ int net_recv(int sockfd, struct timeval timeout, int poll_w, char **response_buf, unsigned int *len) {
+   char temp_buf[1000];
+   int n;
++  net_replies_complete = 0;
+   struct pollfd pfd[1];
+   pfd[0].fd = sockfd;
+   pfd[0].events = POLLIN;
+@@ -2578,12 +2587,29 @@ int net_recv(int sockfd, struct timeval timeout, int poll_w, char **response_buf
+         return 1;
+       }
+       while (n > 0) {
+-        usleep(10);
+         *response_buf = (unsigned char *)ck_realloc(*response_buf, *len + n + 1);
+         memcpy(&(*response_buf)[*len], temp_buf, n);
+         (*response_buf)[(*len) + n] = '\0';
+         *len = *len + n;
+-        n = recv(sockfd, temp_buf, sizeof(temp_buf), 0);
++        /* Everything the server owes us for the session so far is here: do not wait any longer */
++        if (count_complete_replies && net_expected_replies) {
++          net_received_replies += count_complete_replies((unsigned char *)*response_buf, *len, &net_reply_parse_pos);
++          if (net_received_replies >= net_expected_replies) {
++            net_replies_complete = 1;
++            break;
++          }
++        }
++        /* Wait for follow-up data with a millisecond-resolution poll() instead of a
++           blocking recv() bounded by SO_RCVTIMEO: the kernel rounds socket timeouts up
++           to whole scheduler ticks (4-10 ms), which cost ~7 ms per message sent. */
++        {
++          int follow_ms = (int)(timeout.tv_sec * 1000 + (timeout.tv_usec + 999) / 1000);
++          if (follow_ms < 1) follow_ms = 1;
++          /* the server still owes us replies: give them as long as the first one (-W) */
++          if (count_complete_replies && net_expected_replies) follow_ms = poll_w;
++          if (poll(pfd, 1, follow_ms) <= 0) break;
++        }
++        n = recv(sockfd, temp_buf, sizeof(temp_buf), MSG_DONTWAIT);
+         if ((n < 0) && (errno != EAGAIN)) {
+           return 1;
+         }
+@@ -2762,3 +2788,247 @@ u32 read_bytes_to_uint32(unsigned char* buf, unsigned int offset, int num_bytes)
+   }
+   return val;
+ }
++
++/* ------------------------------------------------------------------ */
++/* beanstalkd (text protocol, commands/replies terminated by "\r\n")  */
++/* ------------------------------------------------------------------ */
++
++static const char *bsd_reply_words[] = {
++  "INSERTED", "BURIED", "EXPECTED_CRLF", "JOB_TOO_BIG", "DRAINING", "USING",
++  "RESERVED", "DEADLINE_SOON", "TIMED_OUT", "DELETED", "NOT_FOUND", "RELEASED",
++  "TOUCHED", "WATCHING", "NOT_IGNORED", "KICKED", "FOUND", "OK", "PAUSED",
++  "BAD_FORMAT", "UNKNOWN_COMMAND", "OUT_OF_MEMORY", "INTERNAL_ERROR", NULL
++};
++
++/* Index of the "\r\n" that terminates the line starting at pos, or buf_size if there is none. */
++static unsigned int bsd_find_eol(unsigned char* buf, unsigned int buf_size, unsigned int pos)
++{
++  while (pos + 1 < buf_size) {
++    if (buf[pos] == '\r' && buf[pos + 1] == '\n') return pos;
++    pos++;
++  }
++  return buf_size;
++}
++
++/* Adds a size (job body length) to an offset without overflow, clamped to buf_size. */
++static unsigned int bsd_skip(unsigned int from, unsigned int body_len, unsigned int buf_size)
++{
++  unsigned long long e = (unsigned long long)from + body_len + 2; /* body + "\r\n" */
++  return e > buf_size ? buf_size : (unsigned int)e;
++}
++
++region_t* extract_requests_beanstalkd(unsigned char* buf, unsigned int buf_size, unsigned int* region_count_ref)
++{
++  unsigned int pos = 0;
++  unsigned int region_count = 0;
++  region_t *regions = NULL;
++
++  while (pos < buf_size) {
++    unsigned int start = pos;
++    unsigned int eol = bsd_find_eol(buf, buf_size, pos);
++    unsigned int end = (eol < buf_size) ? eol + 2 : buf_size; /* exclusive */
++
++    /* "put <pri> <delay> <ttr> <bytes>\r\n<data>\r\n": the job body belongs to the same message */
++    if (eol < buf_size && end - start > 4 && memcmp(buf + start, "put ", 4) == 0) {
++      char line[256];
++      unsigned int l = eol - start;
++      unsigned int n = 0;
++      if (l > sizeof(line) - 1) l = sizeof(line) - 1;
++      memcpy(line, buf + start, l);
++      line[l] = 0;
++      if (sscanf(line, "put %*u %*u %*u %u", &n) == 1) end = bsd_skip(end, n, buf_size);
++    }
++
++    region_count++;
++    regions = (region_t *)ck_realloc(regions, region_count * sizeof(region_t));
++    regions[region_count - 1].start_byte = start;
++    regions[region_count - 1].end_byte = end - 1;
++    regions[region_count - 1].state_sequence = NULL;
++    regions[region_count - 1].state_count = 0;
++
++    pos = end;
++  }
++
++  *region_count_ref = region_count;
++  return regions;
++}
++
++unsigned int* extract_response_codes_beanstalkd(unsigned char* buf, unsigned int buf_size, unsigned int* state_count_ref)
++{
++  unsigned int pos = 0;
++  unsigned int state_count = 1;
++  unsigned int *state_sequence = (unsigned int *)ck_alloc(sizeof(unsigned int));
++  state_sequence[0] = 0; /* initial state */
++
++  while (pos < buf_size) {
++    unsigned int eol = bsd_find_eol(buf, buf_size, pos);
++    char line[256];
++    char word[32];
++    unsigned int l, i, code = 0, body = 0;
++    int has_body = 0;
++
++    if (eol >= buf_size) break; /* incomplete line */
++
++    l = eol - pos;
++    if (l > sizeof(line) - 1) l = sizeof(line) - 1;
++    memcpy(line, buf + pos, l);
++    line[l] = 0;
++
++    word[0] = 0;
++    sscanf(line, "%31s", word);
++
++    for (i = 0; bsd_reply_words[i]; i++) {
++      if (strcmp(word, bsd_reply_words[i]) == 0) { code = i + 1; break; }
++    }
++    if (code == 0) code = 99; /* unknown reply */
++
++    /* RESERVED <id> <bytes>, FOUND <id> <bytes>, OK <bytes> are followed by a body */
++    if (strcmp(word, "RESERVED") == 0 || strcmp(word, "FOUND") == 0) {
++      has_body = (sscanf(line, "%*s %*u %u", &body) == 1);
++    } else if (strcmp(word, "OK") == 0) {
++      has_body = (sscanf(line, "%*s %u", &body) == 1);
++    }
++
++    state_count++;
++    state_sequence = (unsigned int *)ck_realloc(state_sequence, state_count * sizeof(unsigned int));
++    state_sequence[state_count - 1] = get_mapped_message_code(code);
++
++    pos = eol + 2;
++    if (has_body) pos = bsd_skip(pos, body, buf_size);
++  }
++
++  *state_count_ref = state_count;
++  return state_sequence;
++}
++
++/* Parses an unsigned decimal field the way beanstalkd's read_u32()/read_duration() do:
++   leading spaces are skipped and the field must start with a digit. Returns 0 on success. */
++static int bsd_read_num(const unsigned char **p, const unsigned char *end, unsigned long long *val)
++{
++  unsigned long long v = 0;
++  while (*p < end && **p == ' ') (*p)++;
++  if (*p >= end || **p < '0' || **p > '9') return -1;
++  while (*p < end && **p >= '0' && **p <= '9') {
++    v = v * 10 + (**p - '0');
++    if (v > 0xffffffffULL) return -1;
++    (*p)++;
++  }
++  *val = v;
++  return 0;
++}
++
++#define BSD_LINE_BUF 224 /* beanstalkd LINE_BUF_SIZE: its command buffer */
++
++/* beanstalkd's scan_line_end(): only the FIRST '\r' in the buffer counts, and it ends a line
++   only if '\n' follows. Returns the line length including "\r\n", or 0. */
++static unsigned int bsd_scan_line_end(const unsigned char *s, unsigned int size)
++{
++  const unsigned char *cr;
++  if (size < 2) return 0;
++  cr = memchr(s, '\r', size - 1);
++  if (cr && cr[1] == '\n') return cr - s + 2;
++  return 0;
++}
++
++/* Number of replies beanstalkd sends for the stream buf[*pos..buf_size). Emulates the server's
++   input handling, which does not depend on how the bytes are split into reads:
++   - the command buffer holds 224 bytes and a line ends at the first '\r' only if '\n' follows;
++   - a full buffer without a line end is discarded in 224-byte steps until a line end is found
++     in a window, which gets one BAD_FORMAT;
++   - a valid "put" header is followed by <bytes>+2 bytes of body (also when the body is too big
++     and gets discarded), and its reply comes once the body is complete;
++   - a line starting with "quit" closes the connection.
++   *pos is advanced past the last complete command, so the caller can feed the growing stream
++   of a session incrementally. */
++unsigned int count_expected_replies_beanstalkd(unsigned char* buf, unsigned int buf_size, unsigned int *pos_ref)
++{
++  unsigned int pos = *pos_ref, replies = 0;
++
++  while (pos < buf_size) {
++    unsigned int avail = buf_size - pos;
++    unsigned int window = avail < BSD_LINE_BUF ? avail : BSD_LINE_BUF;
++    unsigned int l = bsd_scan_line_end(buf + pos, window);
++    unsigned int next;
++
++    if (!l) {
++      unsigned int p;
++      if (window < BSD_LINE_BUF) break;  /* incomplete line: the server keeps waiting */
++      /* line too long: discard 224-byte windows until one contains a line end */
++      for (p = pos + BSD_LINE_BUF; ; p += BSD_LINE_BUF) {
++        unsigned int w = buf_size - p < BSD_LINE_BUF ? buf_size - p : BSD_LINE_BUF;
++        l = bsd_scan_line_end(buf + p, w);
++        if (l || w < BSD_LINE_BUF) break;
++      }
++      if (!l) break;  /* still discarding */
++      replies++;      /* BAD_FORMAT */
++      pos = p + l;
++      continue;
++    }
++
++    next = pos + l;
++    l -= 2;  /* without "\r\n" */
++
++    if (l >= 4 && !memcmp(buf + pos, "quit", 4)) {  /* connection is closed, nothing follows */
++      pos = UINT_MAX;  /* ...in later calls for this session either */
++      break;
++    }
++
++    if (l > 4 && !memcmp(buf + pos, "put ", 4) && !memchr(buf + pos, 0, l)) {
++      unsigned long long pri, delay, ttr, size;
++      const unsigned char *p = buf + pos + 4, *end = buf + pos + l;
++      if (!bsd_read_num(&p, end, &pri) && !bsd_read_num(&p, end, &delay) &&
++          !bsd_read_num(&p, end, &ttr) && !bsd_read_num(&p, end, &size) &&
++          (p == end || size > 65535)) {
++        /* job body (or the discarded too-big body) follows: the reply comes after it */
++        unsigned long long body_end = (unsigned long long)next + size + 2;
++        if (body_end > buf_size) break;
++        next = (unsigned int)body_end;
++      }
++    }
++
++    replies++;
++    pos = next;
++  }
++
++  *pos_ref = pos;
++  return replies;
++}
++
++/* Number of complete replies in buf[*pos..buf_size); *pos is advanced past the last one */
++unsigned int count_complete_replies_beanstalkd(unsigned char* buf, unsigned int buf_size, unsigned int *pos_ref)
++{
++  unsigned int pos = *pos_ref, replies = 0;
++
++  while (pos < buf_size) {
++    unsigned int eol = bsd_find_eol(buf, buf_size, pos);
++    unsigned long long id, body = 0;
++    const unsigned char *p = NULL, *end = buf + eol;
++    int has_body = 0;
++
++    if (eol >= buf_size) break;
++
++    /* RESERVED <id> <bytes>, FOUND <id> <bytes>, OK <bytes> carry a body + "\r\n" */
++    if (eol - pos > 9 && !memcmp(buf + pos, "RESERVED ", 9)) {
++      p = buf + pos + 9;
++      has_body = !bsd_read_num(&p, end, &id) && !bsd_read_num(&p, end, &body);
++    } else if (eol - pos > 6 && !memcmp(buf + pos, "FOUND ", 6)) {
++      p = buf + pos + 6;
++      has_body = !bsd_read_num(&p, end, &id) && !bsd_read_num(&p, end, &body);
++    } else if (eol - pos > 3 && !memcmp(buf + pos, "OK ", 3)) {
++      p = buf + pos + 3;
++      has_body = !bsd_read_num(&p, end, &body);
++    }
++
++    if (has_body) {
++      unsigned long long reply_end = (unsigned long long)eol + 2 + body + 2;
++      if (reply_end > buf_size) break;
++      pos = (unsigned int)reply_end;
++    } else {
++      pos = eol + 2;
++    }
++    replies++;
++  }
++
++  *pos_ref = pos;
++  return replies;
++}
+diff --git a/aflnet.h b/aflnet.h
+index 1d53011..8c16283 100644
+--- a/aflnet.h
++++ b/aflnet.h
+@@ -75,6 +75,7 @@ KHASH_MAP_INIT_INT(32, u32)
+ /*To add support for a new application protocol, please add corresponding function declartion and implementation
+ And update the code to handle -P option in the main function in afl-fuzz.c accordingly */
+ 
++unsigned int* extract_response_codes_beanstalkd(unsigned char* buf, unsigned int buf_size, unsigned int* state_count_ref);
+ unsigned int* extract_response_codes_smtp(unsigned char* buf, unsigned int buf_size, unsigned int* state_count_ref);
+ unsigned int* extract_response_codes_ssh(unsigned char* buf, unsigned int buf_size, unsigned int* state_count_ref);
+ unsigned int* extract_response_codes_tls(unsigned char* buf, unsigned int buf_size, unsigned int* state_count_ref);
+@@ -94,6 +95,7 @@ unsigned int* extract_response_codes_NTP(unsigned char* buf, unsigned int buf_si
+ unsigned int* extract_response_codes_SNMP(unsigned char* buf, unsigned int buf_size, unsigned int* state_count_ref);
+ extern unsigned int* (*extract_response_codes)(unsigned char* buf, unsigned int buf_size, unsigned int* state_count_ref);
+ 
++region_t* extract_requests_beanstalkd(unsigned char* buf, unsigned int buf_size, unsigned int* region_count_ref);
+ region_t* extract_requests_smtp(unsigned char* buf, unsigned int buf_size, unsigned int* region_count_ref);
+ region_t* extract_requests_ssh(unsigned char* buf, unsigned int buf_size, unsigned int* region_count_ref);
+ region_t* extract_requests_tls(unsigned char* buf, unsigned int buf_size, unsigned int* region_count_ref);
+@@ -119,6 +121,22 @@ extern region_t* (*extract_requests)(unsigned char* buf, unsigned int buf_size,
+ int net_send(int sockfd, struct timeval timeout, char *mem, unsigned int len);
+ int net_recv(int sockfd, struct timeval timeout, int poll_w, char **response_buf, unsigned int *len);
+ 
++/* Optional protocol hooks that let net_recv() return as soon as all replies to the
++   messages sent so far have arrived, instead of always waiting for the follow-up timeout.
++   Both parse buf[*pos..buf_size) and advance *pos past the last complete unit, so a session's
++   growing request/response streams are processed incrementally.
++   count_expected_replies: number of replies the server will send for the complete requests.
++   count_complete_replies: number of complete replies.
++   Both stay NULL for protocols that do not implement them (original behaviour). */
++extern unsigned int (*count_expected_replies)(unsigned char* buf, unsigned int buf_size, unsigned int *pos);
++extern unsigned int (*count_complete_replies)(unsigned char* buf, unsigned int buf_size, unsigned int *pos);
++extern unsigned int net_expected_replies;  /* replies the server owes for the session so far (0 = unknown) */
++extern unsigned int net_received_replies;  /* complete replies received in the session so far */
++extern unsigned int net_reply_parse_pos;   /* parse position of count_complete_replies in the response */
++extern unsigned char net_replies_complete; /* set by net_recv(): all expected replies arrived */
++unsigned int count_expected_replies_beanstalkd(unsigned char* buf, unsigned int buf_size, unsigned int *pos);
++unsigned int count_complete_replies_beanstalkd(unsigned char* buf, unsigned int buf_size, unsigned int *pos);
++
+ // kl_messages manipulating functions
+ 
+ /* Construct a new linked list to store all messages from a list of regions */
