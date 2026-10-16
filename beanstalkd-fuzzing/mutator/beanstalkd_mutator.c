@@ -5,6 +5,7 @@
 
 #define MAX_CMDS 256
 #define LINE_MAX_LEN 224
+#define MAX_JOB_SIZE 1024 /* beanstalkd -z, as in the run scripts */
 
 typedef struct {
   uint8_t *data;
@@ -77,7 +78,7 @@ static const cmd_spec_t specs[] = {
 #define N_SPECS (sizeof(specs) / sizeof(specs[0]))
 
 static const char *interesting_nums[] = {
-  "0", "1", "2", "3", "7", "10", "100", "1023", "1024", "65534", "65535", "65536",
+  "0", "1", "2", "3", "7", "10", "100", "1023", "1024", "1025", "65534", "65535", "65536",
   "2147483647", "2147483648", "4294967294", "4294967295", "4294967296",
   "9223372036854775807", "18446744073709551615", "18446744073709551616",
   "99999999999999999999999", "-1", "+1", "01", "0x10", "1a", " 1", "", "1 1",
@@ -211,7 +212,7 @@ static void gen_arg(state_t *s, sb_t *b, arg_t a) {
 }
 
 static void gen_put(state_t *s, sb_t *b) {
-  size_t body = ur(s, 8) ? ur(s, 16) : (ur(s, 2) ? ur(s, 1024) : 65535 + ur(s, 3));
+  size_t body = ur(s, 8) ? ur(s, 16) : (ur(s, 2) ? ur(s, 1024) : MAX_JOB_SIZE + ur(s, 3));
   size_t declared = body, i;
 
   if (ur(s, 10) == 0) declared = body + ur(s, 3) - 1;

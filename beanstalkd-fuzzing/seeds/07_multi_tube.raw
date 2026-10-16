@@ -6,7 +6,7 @@ put 1 0 60 4
 in-b
 watch a
 watch b
-pause-tube a 0
+pause-tube a 1
 reserve-with-timeout 0
 ignore default
 ignore a
@@ -14,7 +14,9 @@ ignore b
 stats-tube a
 stats-tube b
 list-tubes
-bury 1 0
 use a
+bury 2 0
 kick 1
-stats-job 1
+use b
+kick 1
+stats-job 2

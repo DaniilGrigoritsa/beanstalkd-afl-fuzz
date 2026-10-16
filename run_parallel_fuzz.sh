@@ -11,7 +11,7 @@ for i in $(seq 1 "$N"); do
   name=$(printf 'fuzzer%02d' "$i"); port=$((11300 + i))
   ./aflnet/afl-fuzz -S "$name" -i beanstalkd-fuzzing/seeds -o "out/$OUT" -N tcp://127.0.0.1/$port -P BEANSTALKD \
     -D 0 -q 3 -s 3 -E -R -W 10 -t 200 -m none \
-    ./beanstalkd-afl/beanstalkd -p $port -l 127.0.0.1 > "$OUT-$name.log" 2>&1 &
+    ./beanstalkd-afl/beanstalkd -p $port -l 127.0.0.1 -z 1024 > "$OUT-$name.log" 2>&1 &
   sleep 1   # let each instance pick its own free CPU core
 done
 

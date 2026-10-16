@@ -21,4 +21,4 @@ fi
 
 ./aflnet/afl-fuzz -d -i beanstalkd-fuzzing/seeds -o "$OUT" -N tcp://127.0.0.1/11300 -P BEANSTALKD \
   -D 0 -q 3 -s 3 -E -R -W 10 -t 200 -m none \
-  ./beanstalkd-afl/beanstalkd -p 11300 -l 127.0.0.1
+  ./beanstalkd-afl/beanstalkd -p 11300 -l 127.0.0.1 -z 1024

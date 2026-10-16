@@ -20,7 +20,7 @@ $LCOV --zerocounters --directory beanstalkd-gcov -q
 mapfile -t CASES < <(find "$OUT" -path '*replayable-queue/*' -type f | sort)
 echo "replaying ${#CASES[@]} test cases from $OUT"
 for f in "${CASES[@]}"; do
-  ./beanstalkd-gcov/beanstalkd -p $PORT -l 127.0.0.1 >/dev/null 2>&1 & srv=$!
+  ./beanstalkd-gcov/beanstalkd -p $PORT -l 127.0.0.1 -z 1024 >/dev/null 2>&1 & srv=$!
   until ss -ltn "sport = :$PORT" | grep -q LISTEN; do sleep 0.01; done
   timeout 10 ./aflnet/aflnet-replay "$f" BEANSTALKD $PORT 1 >/dev/null 2>&1 || true
   # the server exits by itself when the client disconnects (that writes the .gcda files)

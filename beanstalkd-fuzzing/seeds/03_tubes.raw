@@ -4,7 +4,7 @@ mail-1
 watch emails
 ignore default
 reserve-with-timeout 0
-pause-tube emails 1
+pause-tube emails 0
 list-tubes
 list-tube-used
 list-tubes-watched

@@ -1,5 +1,5 @@
 diff --git a/afl-fuzz.c b/afl-fuzz.c
-index 93b3548..5446175 100644
+index 93b3548..93e9274 100644
 --- a/afl-fuzz.c
 +++ b/afl-fuzz.c
 @@ -55,6 +55,7 @@
@@ -33,7 +33,37 @@ index 93b3548..5446175 100644
  u32 local_port;		/* TCP/UDP port number to use as source */
  u32 *state_sequence = NULL; /* State sequence received from the server */
  u32 state_count = 0; /* Number of states in the state sequence */ 
-@@ -1024,6 +1034,13 @@ int send_over_network()
+@@ -981,6 +991,29 @@ void update_state_aware_variables(struct queue_entry *q, u8 dry_run)
+ }
+ 
+ /* Send (mutated) messages in order to the server under test */
++//Sessions in which an expected reply did not come within -W msec (for fuzzer_stats):
++static u64 net_late_replies,    //the server was still busy and the reply came later
++           net_stalled_sessions, //the server was asleep: it is blocked and will not answer
++           net_cut_sessions;     //AFLNet stopped waiting although the server was not asleep
++static u8 no_proc_state;         //AFLNET_NO_PROC_STATE=1: give up after -W msec as before (still counted)
++
++//State of the server process from /proc/<pid>/stat: 'R' running or runnable, 'S' asleep
++//(waiting for input, a timer or a writable socket), 'D', 'Z', ...; 0 if unknown.
++static char server_proc_state(void) {
++  char path[32], buf[512], *p;
++  int fd, n;
++  if (child_pid <= 0) return 0;
++  snprintf(path, sizeof(path), "/proc/%d/stat", child_pid);
++  fd = open(path, O_RDONLY);
++  if (fd < 0) return 0;
++  n = read(fd, buf, sizeof(buf) - 1);
++  close(fd);
++  if (n <= 0) return 0;
++  buf[n] = 0;
++  p = strrchr(buf, ')');  //the command name in "pid (comm) state ..." may contain spaces
++  return (p && p[1] == ' ') ? p[2] : 0;
++}
++
+ int send_over_network()
+ {
+   int n;
+@@ -1024,6 +1057,13 @@ int send_over_network()
    timeout.tv_usec = socket_timeout_usecs;
    setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout, sizeof(timeout));
  
@@ -47,7 +77,7 @@ index 93b3548..5446175 100644
    memset(&serv_addr, '0', sizeof(serv_addr));
  
    serv_addr.sin_family = AF_INET;
-@@ -1058,12 +1075,25 @@ int send_over_network()
+@@ -1058,12 +1098,25 @@ int send_over_network()
    }
  
    //retrieve early server response if needed
@@ -74,7 +104,7 @@ index 93b3548..5446175 100644
    for (it = kl_begin(kl_messages); it != kl_end(kl_messages); it = kl_next(it)) {
      n = net_send(sockfd, timeout, kl_val(it)->mdata, kl_val(it)->msize);
      messages_sent++;
-@@ -1078,9 +1108,51 @@ int send_over_network()
+@@ -1078,9 +1131,78 @@ int send_over_network()
  
      //retrieve server response
      u32 prev_buf_size = response_buf_size;
@@ -96,6 +126,33 @@ index 93b3548..5446175 100644
      if (net_recv(sockfd, timeout, poll_wait_msecs, &response_buf, &response_buf_size)) {
        goto HANDLE_RESPONSES;
      }
++    //-W msec passed without the expected reply: the server is either blocked (e.g. beanstalkd
++    //"reserve" with no ready job) or only slow (e.g. on a loaded machine). Ask the kernel instead
++    //of guessing: wait while the server process is not asleep (up to the exec timeout), stop once
++    //it sleeps. Giving up on a slow server cuts the session short in some runs only, which shows
++    //up as variable coverage (low stability) and loses the rest of the test case.
++    if (count_expected_replies && count_complete_replies && !net_replies_complete) {
++      char st = server_proc_state();
++      u8 asleep = 0;
++      if (no_proc_state) {
++        asleep = (st == 'S');
++      } else {
++        //a server waiting for a writable socket is asleep too, but net_recv() reads its replies
++        //and so wakes it up: only two "asleep" checks 1 ms apart without new data count
++        u32 last_size = response_buf_size;
++        while (!net_replies_complete && !child_timed_out && st && st != 'Z' && st != 'X') {
++          if (st == 'S' && response_buf_size == last_size && asleep++) break;
++          if (st != 'S' || response_buf_size != last_size) asleep = 0;
++          last_size = response_buf_size;
++          if (net_recv(sockfd, timeout, 1, &response_buf, &response_buf_size)) goto HANDLE_RESPONSES;
++          st = server_proc_state();
++        }
++        asleep = asleep > 1;
++      }
++      if (net_replies_complete) net_late_replies++;
++      else if (asleep) net_stalled_sessions++;
++      else net_cut_sessions++;
++    }
 +    if (count_expected_replies && count_complete_replies && !net_replies_complete) {
 +      server_stalled = 1;
 +      //AFLNET_DEBUG_DIR: save sessions in which an expected reply did not come within -W msec
@@ -126,7 +183,7 @@ index 93b3548..5446175 100644
  
      //Update accumulated response buffer size
      response_bytes[messages_sent - 1] = response_buf_size;
-@@ -1093,7 +1165,11 @@ int send_over_network()
+@@ -1093,7 +1215,11 @@ int send_over_network()
  
  HANDLE_RESPONSES:
  
@@ -139,7 +196,7 @@ index 93b3548..5446175 100644
  
    if (messages_sent > 0 && response_bytes != NULL) {
      response_bytes[messages_sent - 1] = response_buf_size;
-@@ -1111,11 +1187,9 @@ HANDLE_RESPONSES:
+@@ -1111,11 +1237,9 @@ HANDLE_RESPONSES:
  
    if (terminate_child && (child_pid > 0)) kill(child_pid, SIGTERM);
  
@@ -154,27 +211,31 @@ index 93b3548..5446175 100644
  
    return 0;
  }
-@@ -4314,7 +4388,9 @@ static void write_stats_file(double bitmap_cvg, double stability, double eps) {
+@@ -4314,7 +4438,12 @@ static void write_stats_file(double bitmap_cvg, double stability, double eps) {
               "afl_version       : " VERSION "\n"
               "target_mode       : %s%s%s%s%s%s%s\n"
               "command_line      : %s\n"
 -             "slowest_exec_ms   : %llu\n",
 +             "slowest_exec_ms   : %llu\n"
 +             "custom_execs      : %llu\n"
-+             "custom_finds      : %llu\n",
++             "custom_finds      : %llu\n"
++             "late_replies      : %llu\n"
++             "stalled_sessions  : %llu\n"
++             "cut_sessions      : %llu\n",
               start_time / 1000, get_cur_time() / 1000, getpid(),
               queue_cycle ? (queue_cycle - 1) : 0, total_execs, eps,
               queued_paths, queued_favored, queued_discovered, queued_imported,
-@@ -4328,7 +4404,7 @@ static void write_stats_file(double bitmap_cvg, double stability, double eps) {
+@@ -4328,7 +4457,8 @@ static void write_stats_file(double bitmap_cvg, double stability, double eps) {
               persistent_mode ? "persistent " : "", deferred_mode ? "deferred " : "",
               (qemu_mode || dumb_mode || no_forkserver || crash_mode ||
                persistent_mode || deferred_mode) ? "" : "default",
 -             orig_cmdline, slowest_exec_ms);
-+             orig_cmdline, slowest_exec_ms, cm_execs, cm_finds);
++             orig_cmdline, slowest_exec_ms, cm_execs, cm_finds,
++             net_late_replies, net_stalled_sessions, net_cut_sessions);
               /* ignore errors */
  
    /* Get rss value from the children
-@@ -5483,6 +5559,17 @@ EXP_ST u8 common_fuzz_stuff(char** argv, u8* out_buf, u32 len) {
+@@ -5483,6 +5613,17 @@ EXP_ST u8 common_fuzz_stuff(char** argv, u8* out_buf, u32 len) {
      next_it = kl_next(next_it);
    } while(cur_it != M2_next);
  
@@ -192,7 +253,7 @@ index 93b3548..5446175 100644
    /* End of AFLNet code */
  
    fault = run_target(argv, exec_tmout);
-@@ -7023,10 +7110,29 @@ havoc_stage:
+@@ -7023,10 +7164,29 @@ havoc_stage:
    for (stage_cur = 0; stage_cur < stage_max; stage_cur++) {
  
      u32 use_stacking = 1 << (1 + UR(HAVOC_STACK_POW2));
@@ -223,7 +284,7 @@ index 93b3548..5446175 100644
  
        switch (UR(15 + 2 + (region_level_mutation ? 4 : 0))) {
  
-@@ -7483,6 +7589,11 @@ havoc_stage:
+@@ -7483,6 +7643,11 @@ havoc_stage:
      if (common_fuzz_stuff(argv, out_buf, temp_len))
        goto abandon_entry;
  
@@ -235,7 +296,7 @@ index 93b3548..5446175 100644
      /* out_buf might have been mangled a bit, so let's restore it to its
         original size and shape. */
  
-@@ -9043,7 +9154,12 @@ int main(int argc, char** argv) {
+@@ -9043,7 +9208,12 @@ int main(int argc, char** argv) {
        case 'P': /* protocol to be tested */
          if (protocol_selected) FATAL("Multiple -P options not supported");
  
@@ -249,15 +310,16 @@ index 93b3548..5446175 100644
            extract_requests = &extract_requests_rtsp;
            extract_response_codes = &extract_response_codes_rtsp;
          } else if (!strcmp(optarg, "FTP")) {
-@@ -9197,6 +9313,7 @@ int main(int argc, char** argv) {
+@@ -9197,6 +9367,8 @@ int main(int argc, char** argv) {
    if (getenv("AFL_NO_FORKSRV"))    no_forkserver    = 1;
    if (getenv("AFL_NO_CPU_RED"))    no_cpu_meter_red = 1;
    if (getenv("AFL_NO_ARITH"))      no_arith         = 1;
 +  if (getenv("AFLNET_MAX_LEN"))    max_session_len  = atoi(getenv("AFLNET_MAX_LEN"));
++  if (getenv("AFLNET_NO_PROC_STATE")) no_proc_state = 1;
    if (getenv("AFL_SHUFFLE_QUEUE")) shuffle_queue    = 1;
    if (getenv("AFL_FAST_CAL"))      fast_cal         = 1;
  
-@@ -9262,6 +9379,20 @@ int main(int argc, char** argv) {
+@@ -9262,6 +9434,20 @@ int main(int argc, char** argv) {
    else
      use_argv = argv + optind;
  
@@ -278,7 +340,7 @@ index 93b3548..5446175 100644
    perform_dry_run(use_argv);
  
    cull_queue();
-@@ -9554,6 +9685,7 @@ stop_fuzzing:
+@@ -9554,6 +9740,7 @@ stop_fuzzing:
    }
  
    fclose(plot_file);
@@ -301,7 +363,7 @@ index 428fb90..44cac9b 100644
    else if (!strcmp(argv[2], "MQTT")) extract_response_codes = &extract_response_codes_mqtt;
    else if (!strcmp(argv[2], "DNS")) extract_response_codes = &extract_response_codes_dns;
 diff --git a/aflnet.c b/aflnet.c
-index 4c21ead..6b2c0be 100644
+index 4c21ead..69ab11a 100644
 --- a/aflnet.c
 +++ b/aflnet.c
 @@ -1,4 +1,5 @@
@@ -376,7 +438,7 @@ index 4c21ead..6b2c0be 100644
          if ((n < 0) && (errno != EAGAIN)) {
            return 1;
          }
-@@ -2762,3 +2788,247 @@ u32 read_bytes_to_uint32(unsigned char* buf, unsigned int offset, int num_bytes)
+@@ -2762,3 +2788,248 @@ u32 read_bytes_to_uint32(unsigned char* buf, unsigned int offset, int num_bytes)
    }
    return val;
  }
@@ -510,6 +572,7 @@ index 4c21ead..6b2c0be 100644
 +}
 +
 +#define BSD_LINE_BUF 224 /* beanstalkd LINE_BUF_SIZE: its command buffer */
++#define BSD_MAX_JOB_SIZE 1024 /* beanstalkd -z: max job size the run scripts start the server with */
 +
 +/* beanstalkd's scan_line_end(): only the FIRST '\r' in the buffer counts, and it ends a line
 +   only if '\n' follows. Returns the line length including "\r\n", or 0. */
@@ -570,7 +633,7 @@ index 4c21ead..6b2c0be 100644
 +      const unsigned char *p = buf + pos + 4, *end = buf + pos + l;
 +      if (!bsd_read_num(&p, end, &pri) && !bsd_read_num(&p, end, &delay) &&
 +          !bsd_read_num(&p, end, &ttr) && !bsd_read_num(&p, end, &size) &&
-+          (p == end || size > 65535)) {
++          (p == end || size > BSD_MAX_JOB_SIZE)) {
 +        /* job body (or the discarded too-big body) follows: the reply comes after it */
 +        unsigned long long body_end = (unsigned long long)next + size + 2;
 +        if (body_end > buf_size) break;

@@ -69,6 +69,14 @@ The gcov build of beanstalkd (`beanstalkd-gcov/`) is created by `run_coverage.sh
 - Reply model: counts the replies the server owes for the session (emulating beanstalkd's
   224-byte line buffer), so AFLNet returns as soon as they arrived and does not wait for messages
   that get no reply.
+- Late replies: when an expected reply has not come within `-W` msec, AFLNet reads the server's
+  process state (`/proc/<pid>/stat`) instead of guessing. It keeps waiting while the server is
+  running (only slow, e.g. on a loaded machine) and stops once it is asleep (blocked, e.g. in
+  `reserve`). Before, a slow reply cut the session short in single runs only; one such run in
+  calibration marked hundreds of bitmap bytes as variable (stability 98% → 50–80%).
+  `fuzzer_stats`: `late_replies` (came after `-W`), `stalled_sessions` (server blocked),
+  `cut_sessions` (stopped waiting while the server was not asleep: should stay 0).
+  `AFLNET_NO_PROC_STATE=1` restores the old behaviour (the counters still work).
 - `TCP_NODELAY` on the client socket (Nagle held back messages for ~40 ms).
 - Removed per-message `usleep()`s and the busy wait after each execution; `AFLNET_SKIP_EARLY_RECV`
   (no greeting to wait for); `AFLNET_MAX_LEN` (skip test cases larger than N bytes).
@@ -117,6 +125,11 @@ body and keep or break the `<bytes>` field, insert a job-state scenario
 ./run_parallel_fuzz.sh 2 out-par-custom custom
 ```
 
+All scripts start beanstalkd with `-z 1024` (max job size 1024 bytes instead of 65535), so a
+too-big job and its body fit into `AFLNET_MAX_LEN=4096` and the `JOB_TOO_BIG` path is reachable.
+The AFLNet reply model (`BSD_MAX_JOB_SIZE` in `aflnet.c`) and the custom mutator (`MAX_JOB_SIZE`)
+assume the same limit: change all three together.
+
 ## Run fuzzing with custom mutations and without for 30 minutes. Compare the outputs
 
 Both runs at the same time (one CPU core each, ports 11301/11302), single instance, same seeds
@@ -124,28 +137,29 @@ Both runs at the same time (one CPU core each, ports 11301/11302), single instan
 
 ```bash
 ./run_mutation_comparison.sh
-./run_coverage.sh out/cmp-default cov/cmp-default
-./run_coverage.sh out/cmp-custom  cov/cmp-custom
+./run_coverage.sh out/cmp-default-new cov/cmp-default
+./run_coverage.sh out/cmp-custom-new  cov/cmp-custom
 ```
 
 Results (one 30-minute run per mode):
 
-| Metric                                   | Seeds only (no fuzzing) |     Default mutations | Default + custom mutator |
-|------------------------------------------|------------------------:|----------------------:|-------------------------:|
-| Executions                               |                       — |             2 183 498 |                1 772 506 |
-| Average speed, execs/s                   |                       — |                 1 213 |                      985 |
-| Paths in queue (`paths_total`)           |                       9 |                 1 091 |            1 172 (+7.4%) |
-| Paths found by custom mutations          |                       — |                     — |       481 (of 1 163 new) |
-| Executions with custom mutations         |                       — |                     — |        1 109 295 (62.6%) |
-| Map coverage after 1 / 10 / 30 min       |                       — | 0.94% / 0.96% / 0.97% |    0.97% / 0.97% / 0.97% |
-| Paths after 1 / 10 / 30 min              |                       — |     790 / 989 / 1 091 |      886 / 1 098 / 1 172 |
-| Stability                                |                       — |                97.95% |                   96.38% |
-| Crashes / hangs                          |                       — |                 0 / 0 |                    0 / 0 |
-| Lines (all files)                        |  53.7% (1327 of 2470)   |  61.3% (1514 of 2470) |     61.3% (1515 of 2470) |
-| Functions (all files)                    |  72.4% (131 of 181)     |  75.1% (136 of 181)   |     75.1% (136 of 181)   |
-| Branches (all files)                     |  45.3% (580 of 1281)    |  56.9% (729 of 1281)  |     57.0% (730 of 1281)  |
-| Lines / branches without binlog code\*   |  67.2% / 56.2%          |  76.9% / 70.8%        |     76.9% / 70.9%        |
-| `prot.c` lines / branches                |  70.0% / 61.0%          |  84.4% / 80.3%        |     84.5% / 80.5%        |
+| Metric                                 | Seeds only (no fuzzing) |     Default mutations | Default + custom mutator |
+|----------------------------------------|------------------------:|----------------------:|-------------------------:|
+| Executions                             |                       — |             2 416 112 |                2 088 893 |
+| Average speed, execs/s                 |                       — |                 1 342 |                    1 160 |
+| Paths in queue (`paths_total`)         |                       9 |                 1 121 |            1 186 (+5.8%) |
+| Paths found by custom mutations        |                       — |                     — |       510 (of 1 177 new) |
+| Executions with custom mutations       |                       — |                     — |        1 374 870 (65.8%) |
+| Map coverage after 1 / 10 / 30 min     |                       — | 0.93% / 0.96% / 0.97% |    0.97% / 0.97% / 0.97% |
+| Paths after 1 / 10 / 30 min            |                       — |   809 / 1 043 / 1 121 |      874 / 1 127 / 1 186 |
+| Stability                              |                       — |                97.16% |                   98.28% |
+| Sessions cut short (`cut_sessions`)    |                       — |                     0 |                        0 |
+| Crashes / hangs                        |                       — |                 0 / 0 |                    0 / 0 |
+| Lines (all files)                      |    54.3% (1342 of 2470) |  61.7% (1524 of 2470) |     61.9% (1528 of 2470) |
+| Functions (all files)                  |      72.9% (132 of 181) |    75.7% (137 of 181) |       75.7% (137 of 181) |
+| Branches (all files)                   |     46.0% (589 of 1281) |   57.4% (735 of 1281) |      57.6% (738 of 1281) |
+| Lines / branches without binlog code\* |           68.0% / 57.1% |         77.4% / 71.3% |            77.6% / 71.6% |
+| `prot.c` lines / branches              |           70.6% / 61.6% |         84.5% / 80.5% |            84.9% / 81.0% |
 
 ## 5. Coverage (LCOV HTML)
 
@@ -160,7 +174,7 @@ server exit (that writes the `.gcda` counters). At the end `lcov` + `genhtml` cr
 
 \* `file.c` and `walg.c` (binlog, `-b <dir>`) are not used while fuzzing; most of the rest of the
 uncovered code is start-up / command-line handling (`main.c`, `net.c`, `util.c`). The protocol
-code `prot.c` is covered to ~84% lines / ~80% branches.
+code `prot.c` is covered to ~85% lines / ~81% branches.
 
 ## 6. Sanitizer builds and replay of the 30-minute sessions
 
@@ -173,13 +187,13 @@ builds, each session on a fresh server:
 
 ```bash
 # ASan + UBSan
-( for f in out/cmp-*/replayable-queue/*; do echo "== $f"; targets/asan-ubsan/beanstalkd -p 11500 -l 127.0.0.1 & sleep 0.05; ./aflnet/aflnet-replay "$f" BEANSTALKD 11500 1 > /dev/null 2>&1; wait; done )
+( for f in out/cmp-*-new/replayable-queue/*; do echo "== $f"; targets/asan-ubsan/beanstalkd -p 11500 -l 127.0.0.1 -z 1024 & sleep 0.05; ./aflnet/aflnet-replay "$f" BEANSTALKD 11500 1 > /dev/null 2>&1; wait; done )
 
 # MSan
-( for f in out/cmp-*/replayable-queue/*; do echo "== $f"; targets/msan/beanstalkd -p 11500 -l 127.0.0.1 & sleep 0.05; ./aflnet/aflnet-replay "$f" BEANSTALKD 11500 1 > /dev/null 2>&1; wait; done )
+( for f in out/cmp-*-new/replayable-queue/*; do echo "== $f"; targets/msan/beanstalkd -p 11500 -l 127.0.0.1 -z 1024 & sleep 0.05; ./aflnet/aflnet-replay "$f" BEANSTALKD 11500 1 > /dev/null 2>&1; wait; done )
 ```
 
 |        Build | Sessions replayed | Sanitizer reports / abnormal exits |
 |--------------|-------------------|------------------------------------|
-| ASan + UBSan |             2 263 |                                  0 |
-| MSan         |             2 263 |                                  0 |
+| ASan + UBSan |             2 307 |                                  0 |
+| MSan         |             2 307 |                                  0 |

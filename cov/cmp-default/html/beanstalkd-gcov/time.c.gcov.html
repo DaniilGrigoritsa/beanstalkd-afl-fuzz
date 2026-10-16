@@ -4,7 +4,7 @@
 
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <title>LCOV - beanstalkd: out/cmp-default - beanstalkd-gcov/time.c</title>
+  <title>LCOV - beanstalkd: out/cmp-default-new - beanstalkd-gcov/time.c</title>
   <link rel="stylesheet" type="text/css" href="../gcov.css">
 </head>
 
@@ -28,7 +28,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test:</td>
-            <td class="headerValue">beanstalkd: out/cmp-default</td>
+            <td class="headerValue">beanstalkd: out/cmp-default-new</td>
             <td></td>
             <td class="headerItem">Lines:</td>
             <td class="headerCovTableEntry">4</td>
@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2026-10-14 13:44:20</td>
+            <td class="headerValue">2026-10-16 13:56:49</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">1</td>
@@ -75,15 +75,15 @@
 <a name="4"><span class="lineNum">       4 </span>                :            : #include &lt;sys/time.h&gt;</a>
 <a name="5"><span class="lineNum">       5 </span>                :            : </a>
 <a name="6"><span class="lineNum">       6 </span>                :            : int64</a>
-<a name="7"><span class="lineNum">       7 </span>                :<span class="lineCov">     402916 : nanoseconds(void)</span></a>
+<a name="7"><span class="lineNum">       7 </span>                :<span class="lineCov">     376082 : nanoseconds(void)</span></a>
 <a name="8"><span class="lineNum">       8 </span>                :            : {</a>
 <a name="9"><span class="lineNum">       9 </span>                :            :     int r;</a>
 <a name="10"><span class="lineNum">      10 </span>                :            :     struct timeval tv;</a>
 <a name="11"><span class="lineNum">      11 </span>                :            : </a>
-<a name="12"><span class="lineNum">      12 </span>                :<span class="lineCov">     402916 :     r = gettimeofday(&amp;tv, 0);</span></a>
-<a name="13"><span class="lineNum">      13 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 402916 times"> + </span>]:<span class="lineCov">     402916 :     if (r != 0) return warnx(&quot;gettimeofday&quot;), -1; // can't happen</span></a>
+<a name="12"><span class="lineNum">      12 </span>                :<span class="lineCov">     376082 :     r = gettimeofday(&amp;tv, 0);</span></a>
+<a name="13"><span class="lineNum">      13 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 376082 times"> + </span>]:<span class="lineCov">     376082 :     if (r != 0) return warnx(&quot;gettimeofday&quot;), -1; // can't happen</span></a>
 <a name="14"><span class="lineNum">      14 </span>                :            : </a>
-<a name="15"><span class="lineNum">      15 </span>                :<span class="lineCov">     402916 :     return ((int64)tv.tv_sec)*1000000000 + ((int64)tv.tv_usec)*1000;</span></a>
+<a name="15"><span class="lineNum">      15 </span>                :<span class="lineCov">     376082 :     return ((int64)tv.tv_sec)*1000000000 + ((int64)tv.tv_usec)*1000;</span></a>
 <a name="16"><span class="lineNum">      16 </span>                :            : }</a>
 </pre>
       </td>
