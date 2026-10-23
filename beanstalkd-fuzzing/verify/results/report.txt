@@ -1,0 +1,193 @@
+Verification run 2026-10-22T10:44Z, 3 s of fuzzing per seed
+reference: beanstalkd 25085c5 (unpatched) + ref_client.py
+fuzz:      aflnet (patched) + identity mutator + beanstalkd-afl fuzzing build
+
+== 01_lifecycle.raw
+  sessions run by the fuzzer:            11595  (execs_done 11594)
+  fuzzer verdict: cut_sessions = 0
+  client sent the seed unchanged:        11595/11595
+  server replies equal the reference:    11595/11595  (42 bytes)
+  client closed after the last reply:    11595/11595  (close: {'FIN': 11595})
+  coverage: server processes that saved counters N = 11595 (lines in ['main', 'srvserve'] skipped: 40)
+  lines executed: reference 888, fuzz 889; only in reference 1, only in fuzz 2, count != N x reference: 30
+    note      49 functions saved by 11594 processes instead of 11595: the last server process was stopped while writing its counters (main.c:set_sig_handlers(), prot.c:conn_process_io(), prot.c:conn_want_command(), prot.c:dispatch_cmd(), prot.c:enqueue_incoming_job(), prot.c:enqueue_job(), ...)
+    only fuzz conn.c:85 count_cur_conns()  fuzz=11595  |count_cur_conns()
+    only fuzz conn.c:87 count_cur_conns()  fuzz=11595  |return cur_conn_ct;
+    ONLY REF  prot.c:2130 h_conn()  ref=1  |}
+    count     prot.c epollq_apply(): 3 lines run 10230, 10628 times per reference run instead of 11594
+    count     prot.c h_conn(): 2 lines run 9938 times per reference run instead of 11594
+    count     prot.c prottick(): 13 lines run 10306 times per reference run instead of 11594
+    count     prot.c soonest_delayed_job(): 7 lines run 10306 times per reference run instead of 11594
+    count     time.c nanoseconds(): 5 lines run 11014 times per reference run instead of 11595
+    patch     main.c:117  fuzz=11594  |__AFL_INIT();
+    patch     prot.c:2152  fuzz=11594  |if (count_cur_conns() == 0)
+    patch     prot.c:2153  fuzz=11594  |exit(0);
+
+== 02_release_bury_kick.raw
+  sessions run by the fuzzer:            9594  (execs_done 9594)
+  fuzzer verdict: cut_sessions = 0
+  + 1 last session cut by stopping the fuzzer at the end of the run (sent 91 of 158 B, not counted by the fuzzer)
+  client sent the seed unchanged:        9594/9594
+  server replies equal the reference:    9594/9594  (133 bytes)
+  client closed after the last reply:    9594/9594  (close: {'FIN': 9594})
+  coverage: server processes that saved counters N = 9594 (lines in ['main', 'srvserve'] skipped: 40)
+  lines executed: reference 1020, fuzz 1021; only in reference 1, only in fuzz 2, count != N x reference: 30
+    only fuzz conn.c:85 count_cur_conns()  fuzz=9594  |count_cur_conns()
+    only fuzz conn.c:87 count_cur_conns()  fuzz=9594  |return cur_conn_ct;
+    ONLY REF  prot.c:2130 h_conn()  ref=1  |}
+    count     prot.c epollq_apply(): 3 lines run 9168, 9308 times per reference run instead of 9594
+    count     prot.c h_conn(): 2 lines run 9137 times per reference run instead of 9594
+    count     prot.c prottick(): 13 lines run 9177 times per reference run instead of 9594
+    count     prot.c soonest_delayed_job(): 7 lines run 9177 times per reference run instead of 9594
+    count     time.c nanoseconds(): 5 lines run 9423 times per reference run instead of 9594
+    patch     main.c:117  fuzz=9594  |__AFL_INIT();
+    patch     prot.c:2152  fuzz=9594  |if (count_cur_conns() == 0)
+    patch     prot.c:2153  fuzz=9594  |exit(0);
+
+== 03_tubes.raw
+  sessions run by the fuzzer:            9484  (execs_done 9484)
+  fuzzer verdict: cut_sessions = 0
+  client sent the seed unchanged:        9484/9484
+  server replies equal the reference:    9484/9484  (157 bytes)
+  client closed after the last reply:    9484/9484  (close: {'FIN': 9484})
+  coverage: server processes that saved counters N = 9484 (lines in ['main', 'srvserve'] skipped: 40)
+  lines executed: reference 1026, fuzz 1027; only in reference 1, only in fuzz 2, count != N x reference: 25
+    only fuzz conn.c:85 count_cur_conns()  fuzz=9484  |count_cur_conns()
+    only fuzz conn.c:87 count_cur_conns()  fuzz=9484  |return cur_conn_ct;
+    ONLY REF  prot.c:2130 h_conn()  ref=1  |}
+    count     prot.c epollq_apply(): 3 lines run 9062, 9197 times per reference run instead of 9484
+    count     prot.c h_conn(): 2 lines run 9032 times per reference run instead of 9484
+    count     prot.c prottick(): 13 lines run 9072, 9197, 9258, 9263 times per reference run instead of 9484
+    count     prot.c soonest_delayed_job(): 7 lines run 9072, 9197, 9263 times per reference run instead of 9484
+    patch     main.c:117  fuzz=9484  |__AFL_INIT();
+    patch     prot.c:1847  fuzz=9484  |if (delay == 1)
+    patch     prot.c:1848  fuzz=9484  |t->unpause_at = nanoseconds();
+    patch     prot.c:2152  fuzz=9484  |if (count_cur_conns() == 0)
+    patch     prot.c:2153  fuzz=9484  |exit(0);
+
+== 04_peek_stats.raw
+  sessions run by the fuzzer:            8855  (execs_done 8855)
+  fuzzer verdict: cut_sessions = 0
+  + 1 last session cut by stopping the fuzzer at the end of the run (sent 53 of 199 B, not counted by the fuzzer)
+  client sent the seed unchanged:        8855/8855
+  server replies equal the reference:    8855/8855  (1567 bytes)
+  client closed after the last reply:    8855/8855  (close: {'FIN': 8855})
+  coverage: server processes that saved counters N = 8855 (lines in ['main', 'srvserve'] skipped: 40)
+  lines executed: reference 1150, fuzz 1149; only in reference 1, only in fuzz 0, count != N x reference: 34
+    ONLY REF  prot.c:2130 h_conn()  ref=1  |}
+    count     conn.c count_cur_conns(): 2 lines run 13282 times per reference run instead of 8855
+    count     prot.c epollq_apply(): 3 lines run 8565, 8658 times per reference run instead of 8855
+    count     prot.c h_conn(): 2 lines run 8550 times per reference run instead of 8855
+    count     prot.c prottick(): 17 lines run 8527, 8569 times per reference run instead of 8855
+    count     prot.c soonest_delayed_job(): 10 lines run 8527, 8569 times per reference run instead of 8855
+    patch     main.c:117  fuzz=8855  |__AFL_INIT();
+    patch     prot.c:2152  fuzz=8855  |if (count_cur_conns() == 0)
+    patch     prot.c:2153  fuzz=8855  |exit(0);
+
+== 05_errors.raw
+  sessions run by the fuzzer:            9392  (execs_done 9392)
+  fuzzer verdict: cut_sessions = 0
+  + 1 last session cut by stopping the fuzzer at the end of the run (sent 5 of 336 B, not counted by the fuzzer)
+  client sent the seed unchanged:        9392/9392
+  server replies equal the reference:    9392/9392  (115 bytes)
+  client closed after the last reply:    9392/9392  (close: {'FIN': 9392})
+  coverage: server processes that saved counters N = 9392 (lines in ['main', 'srvserve'] skipped: 40)
+  lines executed: reference 752, fuzz 756; only in reference 1, only in fuzz 5, count != N x reference: 32
+    only fuzz conn.c:85 count_cur_conns()  fuzz=9392  |count_cur_conns()
+    only fuzz conn.c:87 count_cur_conns()  fuzz=9392  |return cur_conn_ct;
+    only fuzz linux.c:78 socknext()  fuzz=9392  |return 'h';
+    only fuzz prot.c:2119 h_conn()  fuzz=9392  |c->halfclosed = 1;
+    only fuzz prot.c:2120 h_conn()  fuzz=9392  |}
+    ONLY REF  prot.c:2130 h_conn()  ref=1  |}
+    count     linux.c socknext(): 2 lines run 8538, 8922 times per reference run instead of 9392
+    count     prot.c epollq_apply(): 3 lines run 8934, 9074 times per reference run instead of 9392
+    count     prot.c h_conn(): 2 lines run 8898 times per reference run instead of 9392
+    count     prot.c prottick(): 13 lines run 8945 times per reference run instead of 9392
+    count     prot.c soonest_delayed_job(): 7 lines run 8945 times per reference run instead of 9392
+    count     time.c nanoseconds(): 5 lines run 9016 times per reference run instead of 9392
+    patch     main.c:117  fuzz=9392  |__AFL_INIT();
+    patch     prot.c:2152  fuzz=9392  |if (count_cur_conns() == 0)
+    patch     prot.c:2153  fuzz=9392  |exit(0);
+
+== 06_delayed_kick.raw
+  sessions run by the fuzzer:            8892  (execs_done 8891)
+  fuzzer verdict: cut_sessions = 0
+  client sent the seed unchanged:        8892/8892
+  server replies equal the reference:    8892/8892  (555 bytes)
+  client closed after the last reply:    8892/8892  (close: {'FIN': 8892})
+  coverage: server processes that saved counters N = 8892 (lines in ['main', 'srvserve'] skipped: 40)
+  lines executed: reference 1105, fuzz 1106; only in reference 1, only in fuzz 2, count != N x reference: 30
+    note      64 functions saved by 8891 processes instead of 8892: the last server process was stopped while writing its counters (main.c:set_sig_handlers(), net.c:make_inet_socket(), net.c:make_server_socket(), net.c:set_nonblocking(), prot.c:buried_job_p(), prot.c:conn_process_io(), ...)
+    only fuzz conn.c:85 count_cur_conns()  fuzz=8892  |count_cur_conns()
+    only fuzz conn.c:87 count_cur_conns()  fuzz=8892  |return cur_conn_ct;
+    ONLY REF  prot.c:2130 h_conn()  ref=1  |}
+    count     prot.c epollq_apply(): 3 lines run 8555, 8663 times per reference run instead of 8891
+    count     prot.c h_conn(): 2 lines run 8535 times per reference run instead of 8891
+    count     prot.c prottick(): 13 lines run 8562 times per reference run instead of 8891
+    count     prot.c soonest_delayed_job(): 7 lines run 8083, 8562 times per reference run instead of 8891
+    count     time.c nanoseconds(): 5 lines run 8713 times per reference run instead of 8892
+    patch     main.c:117  fuzz=8891  |__AFL_INIT();
+    patch     prot.c:2152  fuzz=8891  |if (count_cur_conns() == 0)
+    patch     prot.c:2153  fuzz=8891  |exit(0);
+
+== 07_multi_tube.raw
+  sessions run by the fuzzer:            7757  (execs_done 7756)
+  fuzzer verdict: cut_sessions = 0
+  client sent the seed unchanged:        7757/7757
+  server replies equal the reference:    7757/7757  (900 bytes)
+  client closed after the last reply:    7757/7757  (close: {'FIN': 7757})
+  coverage: server processes that saved counters N = 7757 (lines in ['main', 'srvserve'] skipped: 40)
+  lines executed: reference 1122, fuzz 1123; only in reference 1, only in fuzz 2, count != N x reference: 32
+    only fuzz conn.c:85 count_cur_conns()  fuzz=7757  |count_cur_conns()
+    only fuzz conn.c:87 count_cur_conns()  fuzz=7757  |return cur_conn_ct;
+    ONLY REF  prot.c:2130 h_conn()  ref=1  |}
+    count     prot.c epollq_apply(): 3 lines run 7574, 7634 times per reference run instead of 7757
+    count     prot.c h_conn(): 2 lines run 7568 times per reference run instead of 7757
+    count     prot.c prottick(): 15 lines run 7490, 7565, 7568, 7577 times per reference run instead of 7757
+    count     prot.c soonest_delayed_job(): 7 lines run 7565, 7568, 7577 times per reference run instead of 7757
+    count     time.c nanoseconds(): 5 lines run 7674 times per reference run instead of 7757
+    patch     main.c:117  fuzz=7757  |__AFL_INIT();
+    patch     prot.c:1847  fuzz=7757  |if (delay == 1)
+    patch     prot.c:2152  fuzz=7757  |if (count_cur_conns() == 0)
+    patch     prot.c:2153  fuzz=7757  |exit(0);
+
+== 08_bodies.raw
+  sessions run by the fuzzer:            9106  (execs_done 9105)
+  fuzzer verdict: cut_sessions = 0
+  client sent the seed unchanged:        9106/9106
+  server replies equal the reference:    9106/9106  (318 bytes)
+  client closed after the last reply:    9106/9106  (close: {'FIN': 9106})
+  coverage: server processes that saved counters N = 9106 (lines in ['main', 'srvserve'] skipped: 40)
+  lines executed: reference 938, fuzz 939; only in reference 1, only in fuzz 2, count != N x reference: 30
+    only fuzz conn.c:85 count_cur_conns()  fuzz=9106  |count_cur_conns()
+    only fuzz conn.c:87 count_cur_conns()  fuzz=9106  |return cur_conn_ct;
+    ONLY REF  prot.c:2130 h_conn()  ref=1  |}
+    count     prot.c epollq_apply(): 3 lines run 8749, 8857 times per reference run instead of 9106
+    count     prot.c h_conn(): 2 lines run 8727 times per reference run instead of 9106
+    count     prot.c prottick(): 13 lines run 8756 times per reference run instead of 9106
+    count     prot.c soonest_delayed_job(): 7 lines run 8756 times per reference run instead of 9106
+    count     time.c nanoseconds(): 5 lines run 8904 times per reference run instead of 9106
+    patch     main.c:117  fuzz=9106  |__AFL_INIT();
+    patch     prot.c:2152  fuzz=9106  |if (count_cur_conns() == 0)
+    patch     prot.c:2153  fuzz=9106  |exit(0);
+
+== 09_deadline.raw
+  sessions run by the fuzzer:            8857  (execs_done 8856)
+  fuzzer verdict: cut_sessions = 0
+  client sent the seed unchanged:        8857/8857
+  server replies equal the reference:    8857/8857  (1258 bytes)
+  client closed after the last reply:    8857/8857  (close: {'FIN': 8857})
+  coverage: server processes that saved counters N = 8857 (lines in ['main', 'srvserve'] skipped: 40)
+  lines executed: reference 1077, fuzz 1076; only in reference 1, only in fuzz 0, count != N x reference: 32
+    note      86 functions saved by 8856 processes instead of 8857: the last server process was stopped while writing its counters (heap.c:heapinsert(), heap.c:heapremove(), heap.c:less(), heap.c:set(), heap.c:siftdown(), heap.c:siftup(), ...)
+    ONLY REF  prot.c:2130 h_conn()  ref=1  |}
+    count     conn.c count_cur_conns(): 2 lines run 13286 times per reference run instead of 8857
+    count     prot.c epollq_apply(): 3 lines run 8462, 8588 times per reference run instead of 8856
+    count     prot.c h_conn(): 2 lines run 8434 times per reference run instead of 8856
+    count     prot.c prottick(): 13 lines run 8471 times per reference run instead of 8856
+    count     prot.c soonest_delayed_job(): 7 lines run 8471 times per reference run instead of 8856
+    count     time.c nanoseconds(): 5 lines run 8713 times per reference run instead of 8857
+    patch     main.c:117  fuzz=8856  |__AFL_INIT();
+    patch     prot.c:2152  fuzz=8856  |if (count_cur_conns() == 0)
+    patch     prot.c:2153  fuzz=8856  |exit(0);
+
