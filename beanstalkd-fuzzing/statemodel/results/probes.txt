@@ -1,0 +1,29 @@
+difference        sent                                         server                                 spec requires
+ambiguous: NUL    foo\x00bar\r\n                               BAD_FORMAT (silent)                    UNKNOWN_COMMAND or BAD_FORMAT (not a text line)
+ambiguous: NUL    fo\x80o\r\n                                  UNKNOWN_COMMAND (silent)               UNKNOWN_COMMAND
+prefix            stats\r\n                                    OK (silent)                            OK
+prefix            statsX\r\n                                   BAD_FORMAT (silent)                    UNKNOWN_COMMAND (unknown name 'statsX')
+prefix            peek-readyX\r\n                              BAD_FORMAT (silent)                    UNKNOWN_COMMAND
+prefix            list-tubesX\r\n                              BAD_FORMAT (silent)                    UNKNOWN_COMMAND
+prefix            reserveX\r\n                                 BAD_FORMAT (silent)                    UNKNOWN_COMMAND
+prefix            pause-tubeX a 0\r\n                          BAD_FORMAT (silent)                    UNKNOWN_COMMAND
+prefix            quitX\r\nstats\r\n                           - (closed)                             UNKNOWN_COMMAND, OK
+prefix            quit 1\r\nstats\r\n                          - (closed)                             BAD_FORMAT, OK (quit takes no arguments)
+no-space          watch\r\n                                    UNKNOWN_COMMAND (silent)               BAD_FORMAT (known command, missing argument)
+no-space          use\r\n                                      UNKNOWN_COMMAND (silent)               BAD_FORMAT
+no-space          watch \r\n                                   BAD_FORMAT (silent)                    BAD_FORMAT
+no-space          watchX a\r\n                                 UNKNOWN_COMMAND (silent)               UNKNOWN_COMMAND
+trailing-junk     kick 1X\r\n                                  KICKED (silent)                        BAD_FORMAT (non-numeric character in an integer)
+trailing-junk     kick 1 0\r\n                                 KICKED (silent)                        BAD_FORMAT (wrong number of arguments)
+trailing-junk     reserve-with-timeout 0X\r\n                  TIMED_OUT (silent)                     BAD_FORMAT
+trailing-junk     reserve-with-timeout 0 0\r\n                 TIMED_OUT (silent)                     BAD_FORMAT
+trailing-junk     delete 1X\r\n                                BAD_FORMAT (silent)                    BAD_FORMAT
+trailing-junk     touch 1 0\r\n                                BAD_FORMAT (silent)                    BAD_FORMAT
+framing           stats\r\n                                    OK (silent)                            OK
+framing           foo\rbar\r\nstats\r\n                        - (silent)                             UNKNOWN_COMMAND, OK
+framing           stats\r\nfoo\rbar\r\nstats\r\n               OK (silent)                            OK, UNKNOWN_COMMAND, OK
+framing           a\rb\r\nxxxxxxxxxxxxxxx...xxxxxx\r\nstats\r\n BAD_FORMAT, OK (silent)                UNKNOWN_COMMAND, BAD_FORMAT, OK
+too-big-first     put 0 0 60 5 7\r\nhello\r\nstats\r\n         BAD_FORMAT, UNKNOWN_COMMAND, OK (silent) BAD_FORMAT, UNKNOWN_COMMAND, OK
+too-big-first     put 0 0 60 2000 7\r\nhello\r\nstats\r\n      - (silent)                             BAD_FORMAT, UNKNOWN_COMMAND, OK
+too-big-first     put 0 0 60 2000X\r\nhello\r\nstats\r\n       - (silent)                             BAD_FORMAT, UNKNOWN_COMMAND, OK
+ambiguous: limit  reserve-with-timeout 2147483648\r\n          BAD_FORMAT (silent)                    no limit given: TIMED_OUT, or BAD_FORMAT if the server has one

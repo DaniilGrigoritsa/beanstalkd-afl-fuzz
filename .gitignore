@@ -11,3 +11,5 @@
 /targets/
 
 /out/*/
+
+__pycache__/

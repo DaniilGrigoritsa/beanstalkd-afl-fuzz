@@ -1,0 +1,2086 @@
+{
+ "states_explored": 83751,
+ "max_puts": 2,
+ "session_length": 8,
+ "complete": false,
+ "nodes": [
+  "START",
+  "INSERTED",
+  "BURIED",
+  "EXPECTED_CRLF",
+  "JOB_TOO_BIG",
+  "USING",
+  "RESERVED",
+  "DEADLINE_SOON",
+  "TIMED_OUT",
+  "DELETED",
+  "NOT_FOUND",
+  "RELEASED",
+  "TOUCHED",
+  "WATCHING",
+  "NOT_IGNORED",
+  "KICKED",
+  "FOUND",
+  "OK",
+  "PAUSED",
+  "BAD_FORMAT",
+  "UNKNOWN_COMMAND"
+ ],
+ "edges": [
+  [
+   "BAD_FORMAT",
+   "BAD_FORMAT",
+   "watch"
+  ],
+  [
+   "BAD_FORMAT",
+   "BURIED",
+   "bury 1 0"
+  ],
+  [
+   "BAD_FORMAT",
+   "DEADLINE_SOON",
+   "reserve"
+  ],
+  [
+   "BAD_FORMAT",
+   "DELETED",
+   "delete 1"
+  ],
+  [
+   "BAD_FORMAT",
+   "EXPECTED_CRLF",
+   "put 0 0 60 1"
+  ],
+  [
+   "BAD_FORMAT",
+   "FOUND",
+   "peek 1"
+  ],
+  [
+   "BAD_FORMAT",
+   "INSERTED",
+   "put 0 0 60 1"
+  ],
+  [
+   "BAD_FORMAT",
+   "JOB_TOO_BIG",
+   "put 0 0 60 1025"
+  ],
+  [
+   "BAD_FORMAT",
+   "KICKED",
+   "kick 1"
+  ],
+  [
+   "BAD_FORMAT",
+   "NOT_FOUND",
+   "reserve-job 1"
+  ],
+  [
+   "BAD_FORMAT",
+   "NOT_IGNORED",
+   "ignore default"
+  ],
+  [
+   "BAD_FORMAT",
+   "OK",
+   "stats-tube default"
+  ],
+  [
+   "BAD_FORMAT",
+   "PAUSED",
+   "pause-tube default 1"
+  ],
+  [
+   "BAD_FORMAT",
+   "RELEASED",
+   "release 1 0 0"
+  ],
+  [
+   "BAD_FORMAT",
+   "RESERVED",
+   "reserve"
+  ],
+  [
+   "BAD_FORMAT",
+   "TIMED_OUT",
+   "reserve-with-timeout 0"
+  ],
+  [
+   "BAD_FORMAT",
+   "TOUCHED",
+   "touch 1"
+  ],
+  [
+   "BAD_FORMAT",
+   "UNKNOWN_COMMAND",
+   "foo"
+  ],
+  [
+   "BAD_FORMAT",
+   "USING",
+   "use a"
+  ],
+  [
+   "BAD_FORMAT",
+   "WATCHING",
+   "watch a"
+  ],
+  [
+   "BURIED",
+   "BAD_FORMAT",
+   "watch"
+  ],
+  [
+   "BURIED",
+   "BURIED",
+   "bury 2 0"
+  ],
+  [
+   "BURIED",
+   "DEADLINE_SOON",
+   "reserve"
+  ],
+  [
+   "BURIED",
+   "DELETED",
+   "delete 1"
+  ],
+  [
+   "BURIED",
+   "EXPECTED_CRLF",
+   "put 0 0 60 1"
+  ],
+  [
+   "BURIED",
+   "FOUND",
+   "peek 1"
+  ],
+  [
+   "BURIED",
+   "INSERTED",
+   "put 0 0 60 1"
+  ],
+  [
+   "BURIED",
+   "JOB_TOO_BIG",
+   "put 0 0 60 1025"
+  ],
+  [
+   "BURIED",
+   "KICKED",
+   "kick 1"
+  ],
+  [
+   "BURIED",
+   "NOT_FOUND",
+   "delete 2"
+  ],
+  [
+   "BURIED",
+   "NOT_IGNORED",
+   "ignore default"
+  ],
+  [
+   "BURIED",
+   "OK",
+   "stats-job 1"
+  ],
+  [
+   "BURIED",
+   "PAUSED",
+   "pause-tube default 1"
+  ],
+  [
+   "BURIED",
+   "RELEASED",
+   "release 2 0 0"
+  ],
+  [
+   "BURIED",
+   "RESERVED",
+   "reserve-job 1"
+  ],
+  [
+   "BURIED",
+   "TIMED_OUT",
+   "reserve-with-timeout 0"
+  ],
+  [
+   "BURIED",
+   "TOUCHED",
+   "touch 2"
+  ],
+  [
+   "BURIED",
+   "UNKNOWN_COMMAND",
+   "foo"
+  ],
+  [
+   "BURIED",
+   "USING",
+   "use a"
+  ],
+  [
+   "BURIED",
+   "WATCHING",
+   "watch a"
+  ],
+  [
+   "DEADLINE_SOON",
+   "BAD_FORMAT",
+   "watch"
+  ],
+  [
+   "DEADLINE_SOON",
+   "BURIED",
+   "bury 1 0"
+  ],
+  [
+   "DEADLINE_SOON",
+   "DEADLINE_SOON",
+   "reserve"
+  ],
+  [
+   "DEADLINE_SOON",
+   "DELETED",
+   "delete 1"
+  ],
+  [
+   "DEADLINE_SOON",
+   "EXPECTED_CRLF",
+   "put 0 0 60 1"
+  ],
+  [
+   "DEADLINE_SOON",
+   "FOUND",
+   "peek 1"
+  ],
+  [
+   "DEADLINE_SOON",
+   "INSERTED",
+   "put 0 0 60 1"
+  ],
+  [
+   "DEADLINE_SOON",
+   "JOB_TOO_BIG",
+   "put 0 0 60 1025"
+  ],
+  [
+   "DEADLINE_SOON",
+   "KICKED",
+   "kick 1"
+  ],
+  [
+   "DEADLINE_SOON",
+   "NOT_FOUND",
+   "reserve-job 1"
+  ],
+  [
+   "DEADLINE_SOON",
+   "NOT_IGNORED",
+   "ignore default"
+  ],
+  [
+   "DEADLINE_SOON",
+   "OK",
+   "stats-job 1"
+  ],
+  [
+   "DEADLINE_SOON",
+   "PAUSED",
+   "pause-tube default 1"
+  ],
+  [
+   "DEADLINE_SOON",
+   "RELEASED",
+   "release 1 0 0"
+  ],
+  [
+   "DEADLINE_SOON",
+   "RESERVED",
+   "reserve"
+  ],
+  [
+   "DEADLINE_SOON",
+   "TOUCHED",
+   "touch 1"
+  ],
+  [
+   "DEADLINE_SOON",
+   "UNKNOWN_COMMAND",
+   "foo"
+  ],
+  [
+   "DEADLINE_SOON",
+   "USING",
+   "use a"
+  ],
+  [
+   "DEADLINE_SOON",
+   "WATCHING",
+   "watch a"
+  ],
+  [
+   "DELETED",
+   "BAD_FORMAT",
+   "watch"
+  ],
+  [
+   "DELETED",
+   "BURIED",
+   "bury 1 0"
+  ],
+  [
+   "DELETED",
+   "DEADLINE_SOON",
+   "reserve"
+  ],
+  [
+   "DELETED",
+   "DELETED",
+   "delete 2"
+  ],
+  [
+   "DELETED",
+   "EXPECTED_CRLF",
+   "put 0 0 60 1"
+  ],
+  [
+   "DELETED",
+   "FOUND",
+   "peek-ready"
+  ],
+  [
+   "DELETED",
+   "INSERTED",
+   "put 0 0 60 1"
+  ],
+  [
+   "DELETED",
+   "JOB_TOO_BIG",
+   "put 0 0 60 1025"
+  ],
+  [
+   "DELETED",
+   "KICKED",
+   "kick 1"
+  ],
+  [
+   "DELETED",
+   "NOT_FOUND",
+   "reserve-job 1"
+  ],
+  [
+   "DELETED",
+   "NOT_IGNORED",
+   "ignore default"
+  ],
+  [
+   "DELETED",
+   "OK",
+   "stats-tube default"
+  ],
+  [
+   "DELETED",
+   "PAUSED",
+   "pause-tube default 1"
+  ],
+  [
+   "DELETED",
+   "RELEASED",
+   "release 1 0 0"
+  ],
+  [
+   "DELETED",
+   "RESERVED",
+   "reserve"
+  ],
+  [
+   "DELETED",
+   "TIMED_OUT",
+   "reserve-with-timeout 0"
+  ],
+  [
+   "DELETED",
+   "TOUCHED",
+   "touch 1"
+  ],
+  [
+   "DELETED",
+   "UNKNOWN_COMMAND",
+   "foo"
+  ],
+  [
+   "DELETED",
+   "USING",
+   "use a"
+  ],
+  [
+   "DELETED",
+   "WATCHING",
+   "watch a"
+  ],
+  [
+   "EXPECTED_CRLF",
+   "BAD_FORMAT",
+   "watch"
+  ],
+  [
+   "EXPECTED_CRLF",
+   "BURIED",
+   "bury 1 0"
+  ],
+  [
+   "EXPECTED_CRLF",
+   "DEADLINE_SOON",
+   "reserve"
+  ],
+  [
+   "EXPECTED_CRLF",
+   "DELETED",
+   "delete 1"
+  ],
+  [
+   "EXPECTED_CRLF",
+   "EXPECTED_CRLF",
+   "put 0 0 60 1"
+  ],
+  [
+   "EXPECTED_CRLF",
+   "FOUND",
+   "peek 1"
+  ],
+  [
+   "EXPECTED_CRLF",
+   "INSERTED",
+   "put 0 0 60 1"
+  ],
+  [
+   "EXPECTED_CRLF",
+   "JOB_TOO_BIG",
+   "put 0 0 60 1025"
+  ],
+  [
+   "EXPECTED_CRLF",
+   "KICKED",
+   "kick 1"
+  ],
+  [
+   "EXPECTED_CRLF",
+   "NOT_FOUND",
+   "reserve-job 1"
+  ],
+  [
+   "EXPECTED_CRLF",
+   "NOT_IGNORED",
+   "ignore default"
+  ],
+  [
+   "EXPECTED_CRLF",
+   "OK",
+   "stats-tube default"
+  ],
+  [
+   "EXPECTED_CRLF",
+   "PAUSED",
+   "pause-tube default 1"
+  ],
+  [
+   "EXPECTED_CRLF",
+   "RELEASED",
+   "release 1 0 0"
+  ],
+  [
+   "EXPECTED_CRLF",
+   "RESERVED",
+   "reserve"
+  ],
+  [
+   "EXPECTED_CRLF",
+   "TIMED_OUT",
+   "reserve-with-timeout 0"
+  ],
+  [
+   "EXPECTED_CRLF",
+   "TOUCHED",
+   "touch 1"
+  ],
+  [
+   "EXPECTED_CRLF",
+   "UNKNOWN_COMMAND",
+   "foo"
+  ],
+  [
+   "EXPECTED_CRLF",
+   "USING",
+   "use a"
+  ],
+  [
+   "EXPECTED_CRLF",
+   "WATCHING",
+   "watch a"
+  ],
+  [
+   "FOUND",
+   "BAD_FORMAT",
+   "watch"
+  ],
+  [
+   "FOUND",
+   "BURIED",
+   "bury 1 0"
+  ],
+  [
+   "FOUND",
+   "DEADLINE_SOON",
+   "reserve"
+  ],
+  [
+   "FOUND",
+   "DELETED",
+   "delete 1"
+  ],
+  [
+   "FOUND",
+   "EXPECTED_CRLF",
+   "put 0 0 60 1"
+  ],
+  [
+   "FOUND",
+   "FOUND",
+   "peek 1"
+  ],
+  [
+   "FOUND",
+   "INSERTED",
+   "put 0 0 60 1"
+  ],
+  [
+   "FOUND",
+   "JOB_TOO_BIG",
+   "put 0 0 60 1025"
+  ],
+  [
+   "FOUND",
+   "KICKED",
+   "kick 1"
+  ],
+  [
+   "FOUND",
+   "NOT_FOUND",
+   "delete 1"
+  ],
+  [
+   "FOUND",
+   "NOT_IGNORED",
+   "ignore default"
+  ],
+  [
+   "FOUND",
+   "OK",
+   "stats-job 1"
+  ],
+  [
+   "FOUND",
+   "PAUSED",
+   "pause-tube default 1"
+  ],
+  [
+   "FOUND",
+   "RELEASED",
+   "release 1 0 0"
+  ],
+  [
+   "FOUND",
+   "RESERVED",
+   "reserve"
+  ],
+  [
+   "FOUND",
+   "TIMED_OUT",
+   "reserve-with-timeout 0"
+  ],
+  [
+   "FOUND",
+   "TOUCHED",
+   "touch 1"
+  ],
+  [
+   "FOUND",
+   "UNKNOWN_COMMAND",
+   "foo"
+  ],
+  [
+   "FOUND",
+   "USING",
+   "use a"
+  ],
+  [
+   "FOUND",
+   "WATCHING",
+   "watch a"
+  ],
+  [
+   "INSERTED",
+   "BAD_FORMAT",
+   "watch"
+  ],
+  [
+   "INSERTED",
+   "BURIED",
+   "bury 1 0"
+  ],
+  [
+   "INSERTED",
+   "DEADLINE_SOON",
+   "reserve"
+  ],
+  [
+   "INSERTED",
+   "DELETED",
+   "delete 1"
+  ],
+  [
+   "INSERTED",
+   "EXPECTED_CRLF",
+   "put 0 0 60 1"
+  ],
+  [
+   "INSERTED",
+   "FOUND",
+   "peek 1"
+  ],
+  [
+   "INSERTED",
+   "INSERTED",
+   "put 0 0 60 1"
+  ],
+  [
+   "INSERTED",
+   "JOB_TOO_BIG",
+   "put 0 0 60 1025"
+  ],
+  [
+   "INSERTED",
+   "KICKED",
+   "kick 1"
+  ],
+  [
+   "INSERTED",
+   "NOT_FOUND",
+   "delete 1"
+  ],
+  [
+   "INSERTED",
+   "NOT_IGNORED",
+   "ignore default"
+  ],
+  [
+   "INSERTED",
+   "OK",
+   "stats-job 1"
+  ],
+  [
+   "INSERTED",
+   "PAUSED",
+   "pause-tube default 1"
+  ],
+  [
+   "INSERTED",
+   "RELEASED",
+   "release 1 0 0"
+  ],
+  [
+   "INSERTED",
+   "RESERVED",
+   "reserve"
+  ],
+  [
+   "INSERTED",
+   "TIMED_OUT",
+   "reserve-with-timeout 0"
+  ],
+  [
+   "INSERTED",
+   "TOUCHED",
+   "touch 1"
+  ],
+  [
+   "INSERTED",
+   "UNKNOWN_COMMAND",
+   "foo"
+  ],
+  [
+   "INSERTED",
+   "USING",
+   "use a"
+  ],
+  [
+   "INSERTED",
+   "WATCHING",
+   "watch a"
+  ],
+  [
+   "JOB_TOO_BIG",
+   "BAD_FORMAT",
+   "watch"
+  ],
+  [
+   "JOB_TOO_BIG",
+   "BURIED",
+   "bury 1 0"
+  ],
+  [
+   "JOB_TOO_BIG",
+   "DEADLINE_SOON",
+   "reserve"
+  ],
+  [
+   "JOB_TOO_BIG",
+   "DELETED",
+   "delete 1"
+  ],
+  [
+   "JOB_TOO_BIG",
+   "EXPECTED_CRLF",
+   "put 0 0 60 1"
+  ],
+  [
+   "JOB_TOO_BIG",
+   "FOUND",
+   "peek 1"
+  ],
+  [
+   "JOB_TOO_BIG",
+   "INSERTED",
+   "put 0 0 60 1"
+  ],
+  [
+   "JOB_TOO_BIG",
+   "JOB_TOO_BIG",
+   "put 0 0 60 1025"
+  ],
+  [
+   "JOB_TOO_BIG",
+   "KICKED",
+   "kick 1"
+  ],
+  [
+   "JOB_TOO_BIG",
+   "NOT_FOUND",
+   "reserve-job 1"
+  ],
+  [
+   "JOB_TOO_BIG",
+   "NOT_IGNORED",
+   "ignore default"
+  ],
+  [
+   "JOB_TOO_BIG",
+   "OK",
+   "stats-tube default"
+  ],
+  [
+   "JOB_TOO_BIG",
+   "PAUSED",
+   "pause-tube default 1"
+  ],
+  [
+   "JOB_TOO_BIG",
+   "RELEASED",
+   "release 1 0 0"
+  ],
+  [
+   "JOB_TOO_BIG",
+   "RESERVED",
+   "reserve"
+  ],
+  [
+   "JOB_TOO_BIG",
+   "TIMED_OUT",
+   "reserve-with-timeout 0"
+  ],
+  [
+   "JOB_TOO_BIG",
+   "TOUCHED",
+   "touch 1"
+  ],
+  [
+   "JOB_TOO_BIG",
+   "UNKNOWN_COMMAND",
+   "foo"
+  ],
+  [
+   "JOB_TOO_BIG",
+   "USING",
+   "use a"
+  ],
+  [
+   "JOB_TOO_BIG",
+   "WATCHING",
+   "watch a"
+  ],
+  [
+   "KICKED",
+   "BAD_FORMAT",
+   "watch"
+  ],
+  [
+   "KICKED",
+   "BURIED",
+   "bury 1 0"
+  ],
+  [
+   "KICKED",
+   "DEADLINE_SOON",
+   "reserve"
+  ],
+  [
+   "KICKED",
+   "DELETED",
+   "delete 1"
+  ],
+  [
+   "KICKED",
+   "EXPECTED_CRLF",
+   "put 0 0 60 1"
+  ],
+  [
+   "KICKED",
+   "FOUND",
+   "peek 1"
+  ],
+  [
+   "KICKED",
+   "INSERTED",
+   "put 0 0 60 1"
+  ],
+  [
+   "KICKED",
+   "JOB_TOO_BIG",
+   "put 0 0 60 1025"
+  ],
+  [
+   "KICKED",
+   "KICKED",
+   "kick 1"
+  ],
+  [
+   "KICKED",
+   "NOT_FOUND",
+   "reserve-job 1"
+  ],
+  [
+   "KICKED",
+   "NOT_IGNORED",
+   "ignore default"
+  ],
+  [
+   "KICKED",
+   "OK",
+   "stats-tube default"
+  ],
+  [
+   "KICKED",
+   "PAUSED",
+   "pause-tube default 1"
+  ],
+  [
+   "KICKED",
+   "RELEASED",
+   "release 1 0 0"
+  ],
+  [
+   "KICKED",
+   "RESERVED",
+   "reserve"
+  ],
+  [
+   "KICKED",
+   "TIMED_OUT",
+   "reserve-with-timeout 0"
+  ],
+  [
+   "KICKED",
+   "TOUCHED",
+   "touch 1"
+  ],
+  [
+   "KICKED",
+   "UNKNOWN_COMMAND",
+   "foo"
+  ],
+  [
+   "KICKED",
+   "USING",
+   "use a"
+  ],
+  [
+   "KICKED",
+   "WATCHING",
+   "watch a"
+  ],
+  [
+   "NOT_FOUND",
+   "BAD_FORMAT",
+   "watch"
+  ],
+  [
+   "NOT_FOUND",
+   "BURIED",
+   "bury 1 0"
+  ],
+  [
+   "NOT_FOUND",
+   "DEADLINE_SOON",
+   "reserve"
+  ],
+  [
+   "NOT_FOUND",
+   "DELETED",
+   "delete 1"
+  ],
+  [
+   "NOT_FOUND",
+   "EXPECTED_CRLF",
+   "put 0 0 60 1"
+  ],
+  [
+   "NOT_FOUND",
+   "FOUND",
+   "peek 1"
+  ],
+  [
+   "NOT_FOUND",
+   "INSERTED",
+   "put 0 0 60 1"
+  ],
+  [
+   "NOT_FOUND",
+   "JOB_TOO_BIG",
+   "put 0 0 60 1025"
+  ],
+  [
+   "NOT_FOUND",
+   "KICKED",
+   "kick 1"
+  ],
+  [
+   "NOT_FOUND",
+   "NOT_FOUND",
+   "reserve-job 1"
+  ],
+  [
+   "NOT_FOUND",
+   "NOT_IGNORED",
+   "ignore default"
+  ],
+  [
+   "NOT_FOUND",
+   "OK",
+   "stats-tube default"
+  ],
+  [
+   "NOT_FOUND",
+   "PAUSED",
+   "pause-tube default 1"
+  ],
+  [
+   "NOT_FOUND",
+   "RELEASED",
+   "release 1 0 0"
+  ],
+  [
+   "NOT_FOUND",
+   "RESERVED",
+   "reserve"
+  ],
+  [
+   "NOT_FOUND",
+   "TIMED_OUT",
+   "reserve-with-timeout 0"
+  ],
+  [
+   "NOT_FOUND",
+   "TOUCHED",
+   "touch 1"
+  ],
+  [
+   "NOT_FOUND",
+   "UNKNOWN_COMMAND",
+   "foo"
+  ],
+  [
+   "NOT_FOUND",
+   "USING",
+   "use a"
+  ],
+  [
+   "NOT_FOUND",
+   "WATCHING",
+   "watch a"
+  ],
+  [
+   "NOT_IGNORED",
+   "BAD_FORMAT",
+   "watch"
+  ],
+  [
+   "NOT_IGNORED",
+   "BURIED",
+   "bury 1 0"
+  ],
+  [
+   "NOT_IGNORED",
+   "DEADLINE_SOON",
+   "reserve"
+  ],
+  [
+   "NOT_IGNORED",
+   "DELETED",
+   "delete 1"
+  ],
+  [
+   "NOT_IGNORED",
+   "EXPECTED_CRLF",
+   "put 0 0 60 1"
+  ],
+  [
+   "NOT_IGNORED",
+   "FOUND",
+   "peek 1"
+  ],
+  [
+   "NOT_IGNORED",
+   "INSERTED",
+   "put 0 0 60 1"
+  ],
+  [
+   "NOT_IGNORED",
+   "JOB_TOO_BIG",
+   "put 0 0 60 1025"
+  ],
+  [
+   "NOT_IGNORED",
+   "KICKED",
+   "kick 1"
+  ],
+  [
+   "NOT_IGNORED",
+   "NOT_FOUND",
+   "reserve-job 1"
+  ],
+  [
+   "NOT_IGNORED",
+   "NOT_IGNORED",
+   "ignore default"
+  ],
+  [
+   "NOT_IGNORED",
+   "OK",
+   "stats-tube default"
+  ],
+  [
+   "NOT_IGNORED",
+   "PAUSED",
+   "pause-tube default 1"
+  ],
+  [
+   "NOT_IGNORED",
+   "RELEASED",
+   "release 1 0 0"
+  ],
+  [
+   "NOT_IGNORED",
+   "RESERVED",
+   "reserve"
+  ],
+  [
+   "NOT_IGNORED",
+   "TIMED_OUT",
+   "reserve-with-timeout 0"
+  ],
+  [
+   "NOT_IGNORED",
+   "TOUCHED",
+   "touch 1"
+  ],
+  [
+   "NOT_IGNORED",
+   "UNKNOWN_COMMAND",
+   "foo"
+  ],
+  [
+   "NOT_IGNORED",
+   "USING",
+   "use a"
+  ],
+  [
+   "NOT_IGNORED",
+   "WATCHING",
+   "watch a"
+  ],
+  [
+   "OK",
+   "BAD_FORMAT",
+   "watch"
+  ],
+  [
+   "OK",
+   "BURIED",
+   "bury 1 0"
+  ],
+  [
+   "OK",
+   "DEADLINE_SOON",
+   "reserve"
+  ],
+  [
+   "OK",
+   "DELETED",
+   "delete 1"
+  ],
+  [
+   "OK",
+   "EXPECTED_CRLF",
+   "put 0 0 60 1"
+  ],
+  [
+   "OK",
+   "FOUND",
+   "peek 1"
+  ],
+  [
+   "OK",
+   "INSERTED",
+   "put 0 0 60 1"
+  ],
+  [
+   "OK",
+   "JOB_TOO_BIG",
+   "put 0 0 60 1025"
+  ],
+  [
+   "OK",
+   "KICKED",
+   "kick 1"
+  ],
+  [
+   "OK",
+   "NOT_FOUND",
+   "reserve-job 1"
+  ],
+  [
+   "OK",
+   "NOT_IGNORED",
+   "ignore default"
+  ],
+  [
+   "OK",
+   "OK",
+   "stats-tube default"
+  ],
+  [
+   "OK",
+   "PAUSED",
+   "pause-tube default 1"
+  ],
+  [
+   "OK",
+   "RELEASED",
+   "release 1 0 0"
+  ],
+  [
+   "OK",
+   "RESERVED",
+   "reserve"
+  ],
+  [
+   "OK",
+   "TIMED_OUT",
+   "reserve-with-timeout 0"
+  ],
+  [
+   "OK",
+   "TOUCHED",
+   "touch 1"
+  ],
+  [
+   "OK",
+   "UNKNOWN_COMMAND",
+   "foo"
+  ],
+  [
+   "OK",
+   "USING",
+   "use a"
+  ],
+  [
+   "OK",
+   "WATCHING",
+   "watch a"
+  ],
+  [
+   "PAUSED",
+   "BAD_FORMAT",
+   "watch"
+  ],
+  [
+   "PAUSED",
+   "BURIED",
+   "bury 1 0"
+  ],
+  [
+   "PAUSED",
+   "DEADLINE_SOON",
+   "reserve"
+  ],
+  [
+   "PAUSED",
+   "DELETED",
+   "delete 1"
+  ],
+  [
+   "PAUSED",
+   "EXPECTED_CRLF",
+   "put 0 0 60 1"
+  ],
+  [
+   "PAUSED",
+   "FOUND",
+   "peek 1"
+  ],
+  [
+   "PAUSED",
+   "INSERTED",
+   "put 0 0 60 1"
+  ],
+  [
+   "PAUSED",
+   "JOB_TOO_BIG",
+   "put 0 0 60 1025"
+  ],
+  [
+   "PAUSED",
+   "KICKED",
+   "kick 1"
+  ],
+  [
+   "PAUSED",
+   "NOT_FOUND",
+   "reserve-job 1"
+  ],
+  [
+   "PAUSED",
+   "NOT_IGNORED",
+   "ignore default"
+  ],
+  [
+   "PAUSED",
+   "OK",
+   "stats-tube default"
+  ],
+  [
+   "PAUSED",
+   "PAUSED",
+   "pause-tube default 1"
+  ],
+  [
+   "PAUSED",
+   "RELEASED",
+   "release 1 0 0"
+  ],
+  [
+   "PAUSED",
+   "RESERVED",
+   "reserve-job 1"
+  ],
+  [
+   "PAUSED",
+   "TIMED_OUT",
+   "reserve-with-timeout 0"
+  ],
+  [
+   "PAUSED",
+   "TOUCHED",
+   "touch 1"
+  ],
+  [
+   "PAUSED",
+   "UNKNOWN_COMMAND",
+   "foo"
+  ],
+  [
+   "PAUSED",
+   "USING",
+   "use a"
+  ],
+  [
+   "PAUSED",
+   "WATCHING",
+   "watch a"
+  ],
+  [
+   "RELEASED",
+   "BAD_FORMAT",
+   "watch"
+  ],
+  [
+   "RELEASED",
+   "BURIED",
+   "bury 2 0"
+  ],
+  [
+   "RELEASED",
+   "DEADLINE_SOON",
+   "reserve"
+  ],
+  [
+   "RELEASED",
+   "DELETED",
+   "delete 1"
+  ],
+  [
+   "RELEASED",
+   "EXPECTED_CRLF",
+   "put 0 0 60 1"
+  ],
+  [
+   "RELEASED",
+   "FOUND",
+   "peek 1"
+  ],
+  [
+   "RELEASED",
+   "INSERTED",
+   "put 0 0 60 1"
+  ],
+  [
+   "RELEASED",
+   "JOB_TOO_BIG",
+   "put 0 0 60 1025"
+  ],
+  [
+   "RELEASED",
+   "KICKED",
+   "kick 1"
+  ],
+  [
+   "RELEASED",
+   "NOT_FOUND",
+   "delete 1"
+  ],
+  [
+   "RELEASED",
+   "NOT_IGNORED",
+   "ignore default"
+  ],
+  [
+   "RELEASED",
+   "OK",
+   "stats-job 1"
+  ],
+  [
+   "RELEASED",
+   "PAUSED",
+   "pause-tube default 1"
+  ],
+  [
+   "RELEASED",
+   "RELEASED",
+   "release 2 0 0"
+  ],
+  [
+   "RELEASED",
+   "RESERVED",
+   "reserve"
+  ],
+  [
+   "RELEASED",
+   "TIMED_OUT",
+   "reserve-with-timeout 0"
+  ],
+  [
+   "RELEASED",
+   "TOUCHED",
+   "touch 2"
+  ],
+  [
+   "RELEASED",
+   "UNKNOWN_COMMAND",
+   "foo"
+  ],
+  [
+   "RELEASED",
+   "USING",
+   "use a"
+  ],
+  [
+   "RELEASED",
+   "WATCHING",
+   "watch a"
+  ],
+  [
+   "RESERVED",
+   "BAD_FORMAT",
+   "watch"
+  ],
+  [
+   "RESERVED",
+   "BURIED",
+   "bury 1 0"
+  ],
+  [
+   "RESERVED",
+   "DEADLINE_SOON",
+   "reserve"
+  ],
+  [
+   "RESERVED",
+   "DELETED",
+   "delete 1"
+  ],
+  [
+   "RESERVED",
+   "EXPECTED_CRLF",
+   "put 0 0 60 1"
+  ],
+  [
+   "RESERVED",
+   "FOUND",
+   "peek 1"
+  ],
+  [
+   "RESERVED",
+   "INSERTED",
+   "put 0 0 60 1"
+  ],
+  [
+   "RESERVED",
+   "JOB_TOO_BIG",
+   "put 0 0 60 1025"
+  ],
+  [
+   "RESERVED",
+   "KICKED",
+   "kick 1"
+  ],
+  [
+   "RESERVED",
+   "NOT_FOUND",
+   "reserve-job 1"
+  ],
+  [
+   "RESERVED",
+   "NOT_IGNORED",
+   "ignore default"
+  ],
+  [
+   "RESERVED",
+   "OK",
+   "stats-job 1"
+  ],
+  [
+   "RESERVED",
+   "PAUSED",
+   "pause-tube default 1"
+  ],
+  [
+   "RESERVED",
+   "RELEASED",
+   "release 1 0 0"
+  ],
+  [
+   "RESERVED",
+   "RESERVED",
+   "reserve"
+  ],
+  [
+   "RESERVED",
+   "TIMED_OUT",
+   "reserve-with-timeout 0"
+  ],
+  [
+   "RESERVED",
+   "TOUCHED",
+   "touch 1"
+  ],
+  [
+   "RESERVED",
+   "UNKNOWN_COMMAND",
+   "foo"
+  ],
+  [
+   "RESERVED",
+   "USING",
+   "use a"
+  ],
+  [
+   "RESERVED",
+   "WATCHING",
+   "watch a"
+  ],
+  [
+   "START",
+   "BAD_FORMAT",
+   "watch"
+  ],
+  [
+   "START",
+   "EXPECTED_CRLF",
+   "put 0 0 60 1"
+  ],
+  [
+   "START",
+   "INSERTED",
+   "put 0 0 60 1"
+  ],
+  [
+   "START",
+   "JOB_TOO_BIG",
+   "put 0 0 60 1025"
+  ],
+  [
+   "START",
+   "KICKED",
+   "kick 1"
+  ],
+  [
+   "START",
+   "NOT_FOUND",
+   "reserve-job 1"
+  ],
+  [
+   "START",
+   "NOT_IGNORED",
+   "ignore default"
+  ],
+  [
+   "START",
+   "OK",
+   "stats-tube default"
+  ],
+  [
+   "START",
+   "PAUSED",
+   "pause-tube default 1"
+  ],
+  [
+   "START",
+   "TIMED_OUT",
+   "reserve-with-timeout 0"
+  ],
+  [
+   "START",
+   "UNKNOWN_COMMAND",
+   "foo"
+  ],
+  [
+   "START",
+   "USING",
+   "use a"
+  ],
+  [
+   "START",
+   "WATCHING",
+   "watch a"
+  ],
+  [
+   "TIMED_OUT",
+   "BAD_FORMAT",
+   "watch"
+  ],
+  [
+   "TIMED_OUT",
+   "BURIED",
+   "bury 1 0"
+  ],
+  [
+   "TIMED_OUT",
+   "DELETED",
+   "delete 1"
+  ],
+  [
+   "TIMED_OUT",
+   "EXPECTED_CRLF",
+   "put 0 0 60 1"
+  ],
+  [
+   "TIMED_OUT",
+   "FOUND",
+   "peek 1"
+  ],
+  [
+   "TIMED_OUT",
+   "INSERTED",
+   "put 0 0 60 1"
+  ],
+  [
+   "TIMED_OUT",
+   "JOB_TOO_BIG",
+   "put 0 0 60 1025"
+  ],
+  [
+   "TIMED_OUT",
+   "KICKED",
+   "kick 1"
+  ],
+  [
+   "TIMED_OUT",
+   "NOT_FOUND",
+   "reserve-job 1"
+  ],
+  [
+   "TIMED_OUT",
+   "NOT_IGNORED",
+   "ignore default"
+  ],
+  [
+   "TIMED_OUT",
+   "OK",
+   "stats-tube default"
+  ],
+  [
+   "TIMED_OUT",
+   "PAUSED",
+   "pause-tube default 1"
+  ],
+  [
+   "TIMED_OUT",
+   "RELEASED",
+   "release 1 0 0"
+  ],
+  [
+   "TIMED_OUT",
+   "RESERVED",
+   "reserve-job 1"
+  ],
+  [
+   "TIMED_OUT",
+   "TIMED_OUT",
+   "reserve-with-timeout 0"
+  ],
+  [
+   "TIMED_OUT",
+   "TOUCHED",
+   "touch 1"
+  ],
+  [
+   "TIMED_OUT",
+   "UNKNOWN_COMMAND",
+   "foo"
+  ],
+  [
+   "TIMED_OUT",
+   "USING",
+   "use a"
+  ],
+  [
+   "TIMED_OUT",
+   "WATCHING",
+   "watch a"
+  ],
+  [
+   "TOUCHED",
+   "BAD_FORMAT",
+   "watch"
+  ],
+  [
+   "TOUCHED",
+   "BURIED",
+   "bury 1 0"
+  ],
+  [
+   "TOUCHED",
+   "DEADLINE_SOON",
+   "reserve"
+  ],
+  [
+   "TOUCHED",
+   "DELETED",
+   "delete 1"
+  ],
+  [
+   "TOUCHED",
+   "EXPECTED_CRLF",
+   "put 0 0 60 1"
+  ],
+  [
+   "TOUCHED",
+   "FOUND",
+   "peek 1"
+  ],
+  [
+   "TOUCHED",
+   "INSERTED",
+   "put 0 0 60 1"
+  ],
+  [
+   "TOUCHED",
+   "JOB_TOO_BIG",
+   "put 0 0 60 1025"
+  ],
+  [
+   "TOUCHED",
+   "KICKED",
+   "kick 1"
+  ],
+  [
+   "TOUCHED",
+   "NOT_FOUND",
+   "reserve-job 1"
+  ],
+  [
+   "TOUCHED",
+   "NOT_IGNORED",
+   "ignore default"
+  ],
+  [
+   "TOUCHED",
+   "OK",
+   "stats-job 1"
+  ],
+  [
+   "TOUCHED",
+   "PAUSED",
+   "pause-tube default 1"
+  ],
+  [
+   "TOUCHED",
+   "RELEASED",
+   "release 1 0 0"
+  ],
+  [
+   "TOUCHED",
+   "RESERVED",
+   "reserve"
+  ],
+  [
+   "TOUCHED",
+   "TIMED_OUT",
+   "reserve-with-timeout 0"
+  ],
+  [
+   "TOUCHED",
+   "TOUCHED",
+   "touch 1"
+  ],
+  [
+   "TOUCHED",
+   "UNKNOWN_COMMAND",
+   "foo"
+  ],
+  [
+   "TOUCHED",
+   "USING",
+   "use a"
+  ],
+  [
+   "TOUCHED",
+   "WATCHING",
+   "watch a"
+  ],
+  [
+   "UNKNOWN_COMMAND",
+   "BAD_FORMAT",
+   "watch"
+  ],
+  [
+   "UNKNOWN_COMMAND",
+   "BURIED",
+   "bury 1 0"
+  ],
+  [
+   "UNKNOWN_COMMAND",
+   "DEADLINE_SOON",
+   "reserve"
+  ],
+  [
+   "UNKNOWN_COMMAND",
+   "DELETED",
+   "delete 1"
+  ],
+  [
+   "UNKNOWN_COMMAND",
+   "EXPECTED_CRLF",
+   "put 0 0 60 1"
+  ],
+  [
+   "UNKNOWN_COMMAND",
+   "FOUND",
+   "peek 1"
+  ],
+  [
+   "UNKNOWN_COMMAND",
+   "INSERTED",
+   "put 0 0 60 1"
+  ],
+  [
+   "UNKNOWN_COMMAND",
+   "JOB_TOO_BIG",
+   "put 0 0 60 1025"
+  ],
+  [
+   "UNKNOWN_COMMAND",
+   "KICKED",
+   "kick 1"
+  ],
+  [
+   "UNKNOWN_COMMAND",
+   "NOT_FOUND",
+   "reserve-job 1"
+  ],
+  [
+   "UNKNOWN_COMMAND",
+   "NOT_IGNORED",
+   "ignore default"
+  ],
+  [
+   "UNKNOWN_COMMAND",
+   "OK",
+   "stats-tube default"
+  ],
+  [
+   "UNKNOWN_COMMAND",
+   "PAUSED",
+   "pause-tube default 1"
+  ],
+  [
+   "UNKNOWN_COMMAND",
+   "RELEASED",
+   "release 1 0 0"
+  ],
+  [
+   "UNKNOWN_COMMAND",
+   "RESERVED",
+   "reserve"
+  ],
+  [
+   "UNKNOWN_COMMAND",
+   "TIMED_OUT",
+   "reserve-with-timeout 0"
+  ],
+  [
+   "UNKNOWN_COMMAND",
+   "TOUCHED",
+   "touch 1"
+  ],
+  [
+   "UNKNOWN_COMMAND",
+   "UNKNOWN_COMMAND",
+   "foo"
+  ],
+  [
+   "UNKNOWN_COMMAND",
+   "USING",
+   "use a"
+  ],
+  [
+   "UNKNOWN_COMMAND",
+   "WATCHING",
+   "watch a"
+  ],
+  [
+   "USING",
+   "BAD_FORMAT",
+   "watch"
+  ],
+  [
+   "USING",
+   "BURIED",
+   "bury 1 0"
+  ],
+  [
+   "USING",
+   "DEADLINE_SOON",
+   "reserve"
+  ],
+  [
+   "USING",
+   "DELETED",
+   "delete 1"
+  ],
+  [
+   "USING",
+   "EXPECTED_CRLF",
+   "put 0 0 60 1"
+  ],
+  [
+   "USING",
+   "FOUND",
+   "peek 1"
+  ],
+  [
+   "USING",
+   "INSERTED",
+   "put 0 0 60 1"
+  ],
+  [
+   "USING",
+   "JOB_TOO_BIG",
+   "put 0 0 60 1025"
+  ],
+  [
+   "USING",
+   "KICKED",
+   "kick 1"
+  ],
+  [
+   "USING",
+   "NOT_FOUND",
+   "reserve-job 1"
+  ],
+  [
+   "USING",
+   "NOT_IGNORED",
+   "ignore default"
+  ],
+  [
+   "USING",
+   "OK",
+   "stats-tube default"
+  ],
+  [
+   "USING",
+   "PAUSED",
+   "pause-tube default 1"
+  ],
+  [
+   "USING",
+   "RELEASED",
+   "release 1 0 0"
+  ],
+  [
+   "USING",
+   "RESERVED",
+   "reserve"
+  ],
+  [
+   "USING",
+   "TIMED_OUT",
+   "reserve-with-timeout 0"
+  ],
+  [
+   "USING",
+   "TOUCHED",
+   "touch 1"
+  ],
+  [
+   "USING",
+   "UNKNOWN_COMMAND",
+   "foo"
+  ],
+  [
+   "USING",
+   "USING",
+   "use a"
+  ],
+  [
+   "USING",
+   "WATCHING",
+   "watch a"
+  ],
+  [
+   "WATCHING",
+   "BAD_FORMAT",
+   "watch"
+  ],
+  [
+   "WATCHING",
+   "BURIED",
+   "bury 1 0"
+  ],
+  [
+   "WATCHING",
+   "DEADLINE_SOON",
+   "reserve"
+  ],
+  [
+   "WATCHING",
+   "DELETED",
+   "delete 1"
+  ],
+  [
+   "WATCHING",
+   "EXPECTED_CRLF",
+   "put 0 0 60 1"
+  ],
+  [
+   "WATCHING",
+   "FOUND",
+   "peek 1"
+  ],
+  [
+   "WATCHING",
+   "INSERTED",
+   "put 0 0 60 1"
+  ],
+  [
+   "WATCHING",
+   "JOB_TOO_BIG",
+   "put 0 0 60 1025"
+  ],
+  [
+   "WATCHING",
+   "KICKED",
+   "kick 1"
+  ],
+  [
+   "WATCHING",
+   "NOT_FOUND",
+   "reserve-job 1"
+  ],
+  [
+   "WATCHING",
+   "NOT_IGNORED",
+   "ignore default"
+  ],
+  [
+   "WATCHING",
+   "OK",
+   "stats-tube default"
+  ],
+  [
+   "WATCHING",
+   "PAUSED",
+   "pause-tube default 1"
+  ],
+  [
+   "WATCHING",
+   "RELEASED",
+   "release 1 0 0"
+  ],
+  [
+   "WATCHING",
+   "RESERVED",
+   "reserve"
+  ],
+  [
+   "WATCHING",
+   "TIMED_OUT",
+   "reserve-with-timeout 0"
+  ],
+  [
+   "WATCHING",
+   "TOUCHED",
+   "touch 1"
+  ],
+  [
+   "WATCHING",
+   "UNKNOWN_COMMAND",
+   "foo"
+  ],
+  [
+   "WATCHING",
+   "USING",
+   "use a"
+  ],
+  [
+   "WATCHING",
+   "WATCHING",
+   "watch a"
+  ]
+ ]
+}

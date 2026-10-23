@@ -1,0 +1,66 @@
+== cmp-default-new: ipsm.dot has 306 edges, 21 nodes
+  node -> reply code, from 1054 saved sessions (1 with a different length on replay):
+      0 = START
+      1 = INSERTED
+      2 = RESERVED
+      3 = DELETED
+      4 = TOUCHED
+      5 = RELEASED
+      6 = BURIED
+      7 = KICKED
+      8 = USING
+      9 = WATCHING
+     10 = PAUSED
+     11 = OK
+     12 = FOUND
+     13 = NOT_FOUND
+     14 = UNKNOWN_COMMAND
+     15 = BAD_FORMAT
+     16 = EXPECTED_CRLF
+     17 = NOT_IGNORED
+     18 = JOB_TOO_BIG
+     19 = DEADLINE_SOON
+     20 = TIMED_OUT
+  edges in ipsm.dot: 306; also in the reference: 306; NOT allowed by the reference: 0
+== cmp-custom-new: ipsm.dot has 335 edges, 21 nodes
+  node -> reply code, from 1054 saved sessions (0 with a different length on replay):
+      0 = START
+      1 = INSERTED
+      2 = RESERVED
+      3 = DELETED
+      4 = TOUCHED
+      5 = RELEASED
+      6 = BURIED
+      7 = KICKED
+      8 = USING
+      9 = WATCHING
+     10 = PAUSED
+     11 = OK
+     12 = FOUND
+     13 = NOT_FOUND
+     14 = UNKNOWN_COMMAND
+     15 = BAD_FORMAT
+     16 = EXPECTED_CRLF
+     17 = NOT_IGNORED
+     18 = JOB_TOO_BIG
+     19 = DEADLINE_SOON
+     20 = TIMED_OUT
+  edges in ipsm.dot: 335; also in the reference: 335; NOT allowed by the reference: 0
+
+== reference edges never seen by AFLNet (both runs together): 56 of 411
+    BURIED -> JOB_TOO_BIG, NOT_IGNORED, RELEASED, TOUCHED, WATCHING
+    DEADLINE_SOON -> EXPECTED_CRLF, FOUND, JOB_TOO_BIG, NOT_IGNORED, RESERVED
+    DELETED -> BURIED, NOT_IGNORED
+    EXPECTED_CRLF -> JOB_TOO_BIG, KICKED, NOT_IGNORED, PAUSED, RELEASED, TOUCHED
+    FOUND -> NOT_IGNORED, PAUSED
+    INSERTED -> NOT_IGNORED
+    JOB_TOO_BIG -> BURIED, DEADLINE_SOON, EXPECTED_CRLF, NOT_IGNORED, OK, PAUSED, RELEASED, TOUCHED, USING
+    KICKED -> JOB_TOO_BIG, NOT_IGNORED, TOUCHED
+    NOT_IGNORED -> BURIED, DEADLINE_SOON, JOB_TOO_BIG, KICKED, RELEASED, TOUCHED
+    OK -> JOB_TOO_BIG
+    PAUSED -> FOUND, JOB_TOO_BIG, NOT_IGNORED, TOUCHED
+    RELEASED -> BURIED, RELEASED, TOUCHED
+    START -> PAUSED
+    TOUCHED -> JOB_TOO_BIG, NOT_IGNORED
+    USING -> DEADLINE_SOON, FOUND, JOB_TOO_BIG, TOUCHED
+    WATCHING -> JOB_TOO_BIG, TOUCHED

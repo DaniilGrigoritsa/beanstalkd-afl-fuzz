@@ -1,0 +1,323 @@
+===== 1. Strict: the spec model
+Sessions checked: 2307; conform: 919; first difference found in: 1388; with OUT_OF_MEMORY/INTERNAL_ERROR/DRAINING: 0
+
+[1049 sessions] command: <UNKNOWN_COMMAND>   server: BAD_FORMAT   spec allows: UNKNOWN_COMMAND
+    e.g. cmp-default-new/id:000014,src:000000,op:havoc,rep:128,+cov, reply #1
+         command(s) <UNKNOWN_COMMAND>
+         server: BAD_FORMAT   spec: UNKNOWN_COMMAND
+[  39 sessions] command: <BAD_FORMAT>   server: KICKED   spec allows: BAD_FORMAT
+    e.g. cmp-default-new/id:000220,src:000000+000146,op:splice,rep:8, reply #6
+         command(s) <BAD_FORMAT>
+         server: KICKED 0   spec: BAD_FORMAT
+[  39 sessions] command: <BAD_FORMAT>   server: UNKNOWN_COMMAND   spec allows: BAD_FORMAT
+    e.g. cmp-default-new/id:000242,src:000000+000190,op:splice,rep:32, reply #2
+         command(s) <BAD_FORMAT>
+         server: UNKNOWN_COMMAND   spec: BAD_FORMAT
+[  28 sessions] command: <BAD_FORMAT> | <UNKNOWN_COMMAND>   server: (no reply)   spec allows: BAD_FORMAT, UNKNOWN_COMMAND
+    e.g. cmp-default-new/id:000009,src:000000,op:havoc,rep:64,+cov, reply #1
+         command(s) <BAD_FORMAT> | <UNKNOWN_COMMAND>
+         server: (no reply)   spec: BAD_FORMAT | UNKNOWN_COMMAND
+[  25 sessions] command: <BAD_FORMAT>   server: (no reply)   spec allows: BAD_FORMAT
+    e.g. cmp-default-new/id:000035,src:000000,op:havoc,rep:2,+cov, reply #2
+         command(s) <BAD_FORMAT>
+         server: (no reply)   spec: BAD_FORMAT
+[  17 sessions] command: <UNKNOWN_COMMAND>   server: (no reply)   spec allows: UNKNOWN_COMMAND
+    e.g. cmp-default-new/id:000071,src:000000,op:havoc,rep:32, reply #11
+         command(s) <UNKNOWN_COMMAND>
+         server: (no reply)   spec: UNKNOWN_COMMAND
+[  16 sessions] command: <UNKNOWN_COMMAND>   server: NOT_FOUND   spec allows: UNKNOWN_COMMAND
+    e.g. cmp-default-new/id:000117,src:000000,op:havoc,rep:64, reply #8
+         command(s) <UNKNOWN_COMMAND>
+         server: NOT_FOUND   spec: UNKNOWN_COMMAND
+[  15 sessions] command: use   server: UNKNOWN_COMMAND   spec allows: USING
+    e.g. cmp-default-new/id:000658,src:000008+000555,op:splice,rep:16, reply #19
+         command(s) use a
+         server: UNKNOWN_COMMAND   spec: USING a
+[  13 sessions] command: <BAD_FORMAT>   server: RESERVED   spec allows: BAD_FORMAT
+    e.g. cmp-default-new/id:000248,src:000000,op:havoc,rep:4, reply #2
+         command(s) <BAD_FORMAT>
+         server: RESERVED 1 hello   spec: BAD_FORMAT
+[  10 sessions] command: <UNKNOWN_COMMAND>   server: OK   spec allows: UNKNOWN_COMMAND
+    e.g. cmp-default-new/id:000804,src:000005+000510,op:splice,rep:8, reply #11
+         command(s) <UNKNOWN_COMMAND>
+         server: OK   spec: UNKNOWN_COMMAND
+[   9 sessions] command: <BAD_FORMAT> | <UNKNOWN_COMMAND>   server: RESERVED   spec allows: BAD_FORMAT, UNKNOWN_COMMAND
+    e.g. cmp-default-new/id:000199,src:000000,op:havoc,rep:128,+cov, reply #6
+         command(s) <BAD_FORMAT> | <UNKNOWN_COMMAND>
+         server: RESERVED 1 <16 bytes>   spec: BAD_FORMAT | UNKNOWN_COMMAND
+[   9 sessions] command: <BAD_FORMAT>   server: TIMED_OUT   spec allows: BAD_FORMAT
+    e.g. cmp-default-new/id:000204,src:000000+000104,op:splice,rep:128, reply #3
+         command(s) <BAD_FORMAT>
+         server: TIMED_OUT   spec: BAD_FORMAT
+[   8 sessions] command: put   server: UNKNOWN_COMMAND   spec allows: INSERTED
+    e.g. cmp-default-new/id:000048,src:000000,op:havoc,rep:64,+cov, reply #10
+         command(s) put 0 0 60 5
+         server: UNKNOWN_COMMAND   spec: INSERTED 2
+[   8 sessions] command: <BAD_FORMAT> | <UNKNOWN_COMMAND>   server: NOT_FOUND   spec allows: BAD_FORMAT, UNKNOWN_COMMAND
+    e.g. cmp-default-new/id:000076,src:000000,op:havoc,rep:128, reply #5
+         command(s) <BAD_FORMAT> | <UNKNOWN_COMMAND>
+         server: NOT_FOUND   spec: BAD_FORMAT | UNKNOWN_COMMAND
+[   5 sessions] command: <BAD_FORMAT>   server: INSERTED   spec allows: BAD_FORMAT
+    e.g. cmp-default-new/id:000386,src:000001,op:havoc,rep:128, reply #8
+         command(s) <BAD_FORMAT>
+         server: INSERTED 3   spec: BAD_FORMAT
+[   4 sessions] command: reserve-with-timeout   server: BAD_FORMAT   spec allows: TIMED_OUT
+    e.g. cmp-default-new/id:000077,src:000000,op:havoc,rep:64, reply #11
+         command(s) reserve-with-timeout 0
+         server: BAD_FORMAT   spec: TIMED_OUT
+[   4 sessions] command: <BAD_FORMAT>   server: NOT_FOUND   spec allows: BAD_FORMAT
+    e.g. cmp-default-new/id:000257,src:000000,op:havoc,rep:128, reply #63
+         command(s) <BAD_FORMAT>
+         server: NOT_FOUND   spec: BAD_FORMAT
+[   4 sessions] command: reserve-with-timeout   server: BAD_FORMAT   spec allows: RESERVED
+    e.g. cmp-default-new/id:000475,src:000001,op:havoc,rep:64, reply #13
+         command(s) reserve-with-timeout 0
+         server: BAD_FORMAT   spec: RESERVED 2 job-b
+[   4 sessions] command: use   server: WATCHING   spec allows: USING
+    e.g. cmp-default-new/id:000660,src:000008+000555,op:splice,rep:16, reply #23
+         command(s) use a
+         server: WATCHING 2   spec: USING a
+[   4 sessions] command: bury   server: OK   spec allows: NOT_FOUND
+    e.g. cmp-custom-new/id:000802,src:000779+000447,op:splice,rep:8, reply #88
+         command(s) bury 2 1
+         server: OK   spec: NOT_FOUND
+[   3 sessions] command: delete   server: UNKNOWN_COMMAND   spec allows: NOT_FOUND
+    e.g. cmp-default-new/id:000046,src:000000,op:havoc,rep:64,+cov, reply #2
+         command(s) delete 1
+         server: UNKNOWN_COMMAND   spec: NOT_FOUND
+[   3 sessions] command: <UNKNOWN_COMMAND>   server: INSERTED   spec allows: UNKNOWN_COMMAND
+    e.g. cmp-default-new/id:000206,src:000000+000104,op:splice,rep:32, reply #3
+         command(s) <UNKNOWN_COMMAND>
+         server: INSERTED 2   spec: UNKNOWN_COMMAND
+[   3 sessions] command: reserve-with-timeout   server: UNKNOWN_COMMAND   spec allows: TIMED_OUT
+    e.g. cmp-custom-new/id:000364,src:000000+000116,op:splice,rep:32, reply #10
+         command(s) reserve-with-timeout 0
+         server: UNKNOWN_COMMAND   spec: TIMED_OUT
+[   2 sessions] command: <BAD_FORMAT> | <UNKNOWN_COMMAND>   server: TIMED_OUT   spec allows: BAD_FORMAT, UNKNOWN_COMMAND
+    e.g. cmp-default-new/id:000043,src:000000,op:havoc,rep:128, reply #14
+         command(s) <BAD_FORMAT> | <UNKNOWN_COMMAND>
+         server: TIMED_OUT   spec: BAD_FORMAT | UNKNOWN_COMMAND
+[   2 sessions] command: reserve-with-timeout   server: NOT_FOUND   spec allows: TIMED_OUT
+    e.g. cmp-default-new/id:000081,src:000000,op:havoc,rep:64, reply #3
+         command(s) reserve-with-timeout 0
+         server: NOT_FOUND   spec: TIMED_OUT
+[   2 sessions] command: delete   server: BAD_FORMAT   spec allows: NOT_FOUND
+    e.g. cmp-default-new/id:000187,src:000000,op:havoc,rep:32, reply #3
+         command(s) delete 1
+         server: BAD_FORMAT   spec: NOT_FOUND
+[   2 sessions] command: peek-ready   server: BAD_FORMAT   spec allows: NOT_FOUND
+    e.g. cmp-default-new/id:000240,src:000000+000190,op:splice,rep:8, reply #18
+         command(s) peek-ready
+         server: BAD_FORMAT   spec: NOT_FOUND
+[   2 sessions] command: <BAD_FORMAT> | <UNKNOWN_COMMAND>   server: DELETED   spec allows: BAD_FORMAT, UNKNOWN_COMMAND
+    e.g. cmp-default-new/id:000286,src:000000,op:havoc,rep:64, reply #21
+         command(s) <BAD_FORMAT> | <UNKNOWN_COMMAND>
+         server: DELETED   spec: BAD_FORMAT | UNKNOWN_COMMAND
+[   2 sessions] command: <BAD_FORMAT> | <UNKNOWN_COMMAND>   server: OK   spec allows: BAD_FORMAT, UNKNOWN_COMMAND
+    e.g. cmp-default-new/id:000471,src:000001,op:havoc,rep:64, reply #9
+         command(s) <BAD_FORMAT> | <UNKNOWN_COMMAND>
+         server: OK   spec: BAD_FORMAT | UNKNOWN_COMMAND
+[   2 sessions] command: use   server: OK   spec allows: USING
+    e.g. cmp-default-new/id:000552,src:000002+000006,op:splice,rep:4,+cov, reply #24
+         command(s) use b
+         server: OK   spec: USING b
+[   2 sessions] command: delete   server: BAD_FORMAT   spec allows: DELETED, NOT_FOUND
+    e.g. cmp-default-new/id:000615,src:000003,op:havoc,rep:128,+cov, reply #15
+         command(s) delete 1
+         server: BAD_FORMAT   spec: DELETED | NOT_FOUND
+[   2 sessions] command: <UNKNOWN_COMMAND>   server: RELEASED   spec allows: UNKNOWN_COMMAND
+    e.g. cmp-default-new/id:000654,src:000008+000555,op:splice,rep:2, reply #20
+         command(s) <UNKNOWN_COMMAND>
+         server: RELEASED   spec: UNKNOWN_COMMAND
+[   2 sessions] command: use   server: INSERTED   spec allows: USING
+    e.g. cmp-default-new/id:000657,src:000008+000555,op:splice,rep:8, reply #22
+         command(s) use a
+         server: INSERTED 3   spec: USING a
+[   2 sessions] command: <UNKNOWN_COMMAND>   server: KICKED   spec allows: UNKNOWN_COMMAND
+    e.g. cmp-default-new/id:000870,src:000713,op:havoc,rep:128, reply #24
+         command(s) <UNKNOWN_COMMAND>
+         server: KICKED 0   spec: UNKNOWN_COMMAND
+[   2 sessions] command: reserve-job   server: BAD_FORMAT   spec allows: NOT_FOUND
+    e.g. cmp-default-new/id:000923,src:000866+000036,op:splice,rep:128, reply #49
+         command(s) reserve-job 2
+         server: BAD_FORMAT   spec: NOT_FOUND
+[   2 sessions] command: <UNKNOWN_COMMAND>   server: DELETED   spec allows: UNKNOWN_COMMAND
+    e.g. cmp-custom-new/id:000898,src:000118+000366,op:splice,rep:128, reply #11
+         command(s) <UNKNOWN_COMMAND>
+         server: DELETED   spec: UNKNOWN_COMMAND
+[   1 sessions] command: <EXPECTED_CRLF>   server: UNKNOWN_COMMAND   spec allows: EXPECTED_CRLF
+    e.g. cmp-default-new/id:000130,src:000000,op:havoc,rep:128, reply #13
+         command(s) <EXPECTED_CRLF>
+         server: UNKNOWN_COMMAND   spec: EXPECTED_CRLF
+[   1 sessions] command: peek-buried   server: BAD_FORMAT   spec allows: NOT_FOUND
+    e.g. cmp-default-new/id:000260,src:000000,op:havoc,rep:64, reply #3
+         command(s) peek-buried
+         server: BAD_FORMAT   spec: NOT_FOUND
+[   1 sessions] command: peek-delayed   server: BAD_FORMAT   spec allows: NOT_FOUND
+    e.g. cmp-default-new/id:000287,src:000000,op:havoc,rep:64, reply #29
+         command(s) peek-delayed
+         server: BAD_FORMAT   spec: NOT_FOUND
+[   1 sessions] command: put   server: BAD_FORMAT   spec allows: INSERTED
+    e.g. cmp-default-new/id:000317,src:000000+000121,op:splice,rep:16, reply #7
+         command(s) put 1 0 60 5
+         server: BAD_FORMAT   spec: INSERTED 2
+[   1 sessions] command: <BAD_FORMAT> | <UNKNOWN_COMMAND>   server: INSERTED   spec allows: BAD_FORMAT, UNKNOWN_COMMAND
+    e.g. cmp-default-new/id:000431,src:000001,op:havoc,rep:64, reply #9
+         command(s) <BAD_FORMAT> | <UNKNOWN_COMMAND>
+         server: INSERTED 5   spec: BAD_FORMAT | UNKNOWN_COMMAND
+[   1 sessions] command: <BAD_FORMAT> | <UNKNOWN_COMMAND>   server: PAUSED   spec allows: BAD_FORMAT, UNKNOWN_COMMAND
+    e.g. cmp-default-new/id:000514,src:000002,op:havoc,rep:32, reply #5
+         command(s) <BAD_FORMAT> | <UNKNOWN_COMMAND>
+         server: PAUSED   spec: BAD_FORMAT | UNKNOWN_COMMAND
+[   1 sessions] command: <UNKNOWN_COMMAND>   server: EXPECTED_CRLF   spec allows: UNKNOWN_COMMAND
+    e.g. cmp-default-new/id:000517,src:000002+000168,op:splice,rep:64, reply #13
+         command(s) <UNKNOWN_COMMAND>
+         server: EXPECTED_CRLF   spec: UNKNOWN_COMMAND
+[   1 sessions] command: pause-tube   server: BAD_FORMAT   spec allows: PAUSED
+    e.g. cmp-default-new/id:000521,src:000002+000506,op:splice,rep:16, reply #13
+         command(s) pause-tube emails 0
+         server: BAD_FORMAT   spec: PAUSED
+[   1 sessions] command: ignore   server: OK   spec allows: WATCHING
+    e.g. cmp-default-new/id:000556,src:000002+000006,op:splice,rep:8, reply #13
+         command(s) ignore a
+         server: OK   spec: WATCHING 3
+[   1 sessions] command: <BAD_FORMAT> | <UNKNOWN_COMMAND>   server: BURIED   spec allows: BAD_FORMAT, UNKNOWN_COMMAND
+    e.g. cmp-default-new/id:000595,src:000002+000570,op:splice,rep:16, reply #9
+         command(s) <BAD_FORMAT> | <UNKNOWN_COMMAND>
+         server: BURIED   spec: BAD_FORMAT | UNKNOWN_COMMAND
+[   1 sessions] command: delete   server: UNKNOWN_COMMAND   spec allows: DELETED, NOT_FOUND
+    e.g. cmp-default-new/id:000622,src:000003,op:havoc,rep:64, reply #16
+         command(s) delete 1
+         server: UNKNOWN_COMMAND   spec: DELETED | NOT_FOUND
+[   1 sessions] command: ignore   server: BAD_FORMAT   spec allows: WATCHING
+    e.g. cmp-default-new/id:000652,src:000008+000555,op:splice,rep:32, reply #18
+         command(s) ignore a
+         server: BAD_FORMAT   spec: WATCHING 3
+[   1 sessions] command: <BAD_FORMAT> | <UNKNOWN_COMMAND>   server: DEADLINE_SOON   spec allows: BAD_FORMAT, UNKNOWN_COMMAND
+    e.g. cmp-default-new/id:000671,src:000008+000246,op:splice,rep:128, reply #5
+         command(s) <BAD_FORMAT> | <UNKNOWN_COMMAND>
+         server: DEADLINE_SOON   spec: BAD_FORMAT | UNKNOWN_COMMAND
+[   1 sessions] command: kick   server: INSERTED   spec allows: KICKED
+    e.g. cmp-default-new/id:000695,src:000370+000222,op:splice,rep:32, reply #94
+         command(s) kick 5
+         server: INSERTED 3   spec: KICKED 0
+[   1 sessions] command: pause-tube   server: WATCHING   spec allows: NOT_FOUND
+    e.g. cmp-default-new/id:000715,src:000003+000564,op:splice,rep:16, reply #20
+         command(s) pause-tube a 1
+         server: WATCHING 1   spec: NOT_FOUND
+[   1 sessions] command: <BAD_FORMAT> | reserve-with-timeout   server: NOT_FOUND   spec allows: BAD_FORMAT, RESERVED
+    e.g. cmp-default-new/id:000803,src:000005+000510,op:splice,rep:16, reply #11
+         command(s) <BAD_FORMAT> | reserve-with-timeout 0
+         server: NOT_FOUND   spec: BAD_FORMAT | RESERVED 2 d2
+[   1 sessions] command: peek   server: BAD_FORMAT   spec allows: NOT_FOUND
+    e.g. cmp-default-new/id:000900,src:000062,op:havoc,rep:8, reply #5
+         command(s) peek 2
+         server: BAD_FORMAT   spec: NOT_FOUND
+[   1 sessions] command: put   server: RESERVED   spec allows: INSERTED
+    e.g. cmp-default-new/id:000954,src:000456+000895,op:splice,rep:128,+cov, reply #10
+         command(s) put 1 0 60 5
+         server: RESERVED 1 job-a   spec: INSERTED 5
+[   1 sessions] command: put   server: KICKED   spec allows: INSERTED
+    e.g. cmp-default-new/id:001001,src:000393+000955,op:splice,rep:2, reply #14
+         command(s) put 1 0 60 5
+         server: KICKED 1   spec: INSERTED 6
+[   1 sessions] command: pause-tube   server: BAD_FORMAT   spec allows: NOT_FOUND
+    e.g. cmp-default-new/id:001011,src:000794+000331,op:splice,rep:64, reply #53
+         command(s) pause-tube emails 0
+         server: BAD_FORMAT   spec: NOT_FOUND
+[   1 sessions] command: <UNKNOWN_COMMAND>   server: FOUND   spec allows: UNKNOWN_COMMAND
+    e.g. cmp-default-new/id:001028,src:000806+001010,op:splice,rep:4, reply #31
+         command(s) <UNKNOWN_COMMAND>
+         server: FOUND 3 hello   spec: UNKNOWN_COMMAND
+[   1 sessions] command: <BAD_FORMAT>   server: PAUSED   spec allows: BAD_FORMAT
+    e.g. cmp-default-new/id:001030,src:000806+000957,op:splice,rep:16, reply #48
+         command(s) <BAD_FORMAT>
+         server: PAUSED   spec: BAD_FORMAT
+[   1 sessions] command: ignore   server: TIMED_OUT   spec allows: NOT_IGNORED
+    e.g. cmp-default-new/id:001043,src:000006+000775,op:splice,rep:32, reply #81
+         command(s) ignore a
+         server: TIMED_OUT   spec: NOT_IGNORED
+[   1 sessions] command: ignore   server: BAD_FORMAT   spec allows: NOT_IGNORED
+    e.g. cmp-default-new/id:001074,src:000414+000744,op:splice,rep:8, reply #40
+         command(s) ignore default
+         server: BAD_FORMAT   spec: NOT_IGNORED
+[   1 sessions] command: release   server: KICKED   spec allows: NOT_FOUND
+    e.g. cmp-default-new/id:001099,src:000966+000886,op:splice,rep:16, reply #10
+         command(s) release 1 0 30
+         server: KICKED 1   spec: NOT_FOUND
+[   1 sessions] command: put   server: EXPECTED_CRLF   spec allows: INSERTED
+    e.g. cmp-custom-new/id:000297,src:000000,op:havoc,rep:64, reply #12
+         command(s) put 0 0 60 1
+         server: EXPECTED_CRLF   spec: INSERTED 1
+[   1 sessions] command: peek-buried   server: UNKNOWN_COMMAND   spec allows: NOT_FOUND
+    e.g. cmp-custom-new/id:000336,src:000000+000200,op:splice,rep:32, reply #8
+         command(s) peek-buried
+         server: UNKNOWN_COMMAND   spec: NOT_FOUND
+[   1 sessions] command: <UNKNOWN_COMMAND>   server: WATCHING   spec allows: UNKNOWN_COMMAND
+    e.g. cmp-custom-new/id:000344,src:000000+000321,op:splice,rep:32, reply #2
+         command(s) <UNKNOWN_COMMAND>
+         server: WATCHING 2   spec: UNKNOWN_COMMAND
+[   1 sessions] command: peek-ready   server: TIMED_OUT   spec allows: NOT_FOUND
+    e.g. cmp-custom-new/id:000363,src:000000+000116,op:splice,rep:16, reply #7
+         command(s) peek-ready
+         server: TIMED_OUT   spec: NOT_FOUND
+[   1 sessions] command: touch   server: BAD_FORMAT   spec allows: NOT_FOUND
+    e.g. cmp-custom-new/id:000437,src:000000+000312,op:splice,rep:16, reply #3
+         command(s) touch 1
+         server: BAD_FORMAT   spec: NOT_FOUND
+[   1 sessions] command: stats   server: UNKNOWN_COMMAND   spec allows: OK
+    e.g. cmp-custom-new/id:000470,src:000000+000437,op:splice,rep:8, reply #32
+         command(s) stats
+         server: UNKNOWN_COMMAND   spec: OK
+[   1 sessions] command: stats   server: NOT_FOUND   spec allows: OK
+    e.g. cmp-custom-new/id:000486,src:000000+000447,op:splice,rep:16, reply #51
+         command(s) stats
+         server: NOT_FOUND   spec: OK
+[   1 sessions] command: <BAD_FORMAT>   server: WATCHING   spec allows: BAD_FORMAT
+    e.g. cmp-custom-new/id:000577,src:000001,op:havoc,rep:128, reply #8
+         command(s) <BAD_FORMAT>
+         server: WATCHING 2   spec: BAD_FORMAT
+[   1 sessions] command: watch   server: BAD_FORMAT   spec allows: WATCHING
+    e.g. cmp-custom-new/id:000658,src:000001+000006,op:splice,rep:64, reply #15
+         command(s) watch b
+         server: BAD_FORMAT   spec: WATCHING 2
+[   1 sessions] command: touch   server: DELETED   spec allows: NOT_FOUND
+    e.g. cmp-custom-new/id:000684,src:000001+000559,op:splice,rep:16, reply #23
+         command(s) touch 1
+         server: DELETED   spec: NOT_FOUND
+[   1 sessions] command: reserve-job   server: TIMED_OUT   spec allows: NOT_FOUND
+    e.g. cmp-custom-new/id:000697,src:000002,op:havoc,rep:64, reply #26
+         command(s) reserve-job 4
+         server: TIMED_OUT   spec: NOT_FOUND
+[   1 sessions] command: stats   server: BAD_FORMAT   spec allows: OK
+    e.g. cmp-custom-new/id:000708,src:000002+000483,op:splice,rep:16, reply #23
+         command(s) stats
+         server: BAD_FORMAT   spec: OK
+[   1 sessions] command: bury   server: BAD_FORMAT   spec allows: NOT_FOUND
+    e.g. cmp-custom-new/id:000814,src:000001+000489,op:splice,rep:128, reply #4
+         command(s) bury 16 9
+         server: BAD_FORMAT   spec: NOT_FOUND
+[   1 sessions] command: delete   server: EXPECTED_CRLF   spec allows: DELETED, NOT_FOUND
+    e.g. cmp-custom-new/id:000859,src:000006+000524,op:splice,rep:32, reply #34
+         command(s) delete 1
+         server: EXPECTED_CRLF   spec: DELETED | NOT_FOUND
+[   1 sessions] command: <BAD_FORMAT>   server: DEADLINE_SOON   spec allows: BAD_FORMAT
+    e.g. cmp-custom-new/id:001097,src:000305+000884,op:splice,rep:64, reply #104
+         command(s) <BAD_FORMAT>
+         server: DEADLINE_SOON   spec: BAD_FORMAT
+[   1 sessions] command: pause-tube   server: UNKNOWN_COMMAND   spec allows: PAUSED
+    e.g. cmp-custom-new/id:001098,src:000305+001076,op:splice,rep:16, reply #20
+         command(s) pause-tube emails 0
+         server: UNKNOWN_COMMAND   spec: PAUSED
+[   1 sessions] command: <BAD_FORMAT>   server: BURIED   spec allows: BAD_FORMAT
+    e.g. cmp-custom-new/id:001113,src:000559+000994,op:splice,rep:16, reply #6
+         command(s) <BAD_FORMAT>
+         server: BURIED   spec: BAD_FORMAT
+[   1 sessions] command: kick   server: UNKNOWN_COMMAND   spec allows: KICKED
+    e.g. cmp-custom-new/id:001160,src:000540+001124,op:splice,rep:16, reply #171
+         command(s) kick 0
+         server: UNKNOWN_COMMAND   spec: KICKED 0
+
+===== 2. The spec model + the server differences already found (framing, no-space, prefix, too-big-first, trailing-junk)
+Sessions checked: 2307; conform: 2307; first difference found in: 0; with OUT_OF_MEMORY/INTERNAL_ERROR/DRAINING: 0
+
