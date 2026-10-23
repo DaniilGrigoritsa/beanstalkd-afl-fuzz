@@ -18,7 +18,7 @@ index 20277ff..a579a95 100644
      exit(0);
  }
 diff --git a/prot.c b/prot.c
-index 297e772..f2909d0 100644
+index 297e772..cfe8b5a 100644
 --- a/prot.c
 +++ b/prot.c
 @@ -1838,6 +1838,15 @@ dispatch_cmd(Conn *c)
@@ -37,7 +37,22 @@ index 297e772..f2909d0 100644
          t->pause = delay;
          t->stat.pause_ct++;
  
-@@ -2127,6 +2136,14 @@ h_conn(const int fd, const short which, Conn *c)
+@@ -1890,6 +1899,14 @@ conn_timeout(Conn *c)
+     }
+ 
+     if (should_timeout) {
++#ifdef FUZZ_DETERMINISTIC
++        // Fuzzing build: the wait is over, so drop its timeout, as the TIMED_OUT branch below
++        // does. Left at 0, it makes conntickat() arm a timer for "now" on every reschedule;
++        // whether that empty timer fires before the next command depends on the clock and on
++        // how often the event loop runs, so the coverage of conn_timeout()/prottick() changed
++        // from run to run (unstable paths in AFL).
++        c->pending_timeout = -1;
++#endif
+         remove_waiting_conn(c);
+         reply_msg(c, MSG_DEADLINE_SOON);
+     } else if (conn_waiting(c) && c->pending_timeout >= 0) {
+@@ -2127,6 +2144,14 @@ h_conn(const int fd, const short which, Conn *c)
      if (c->state == STATE_CLOSE) {
          epollq_rmconn(c);
          connclose(c);

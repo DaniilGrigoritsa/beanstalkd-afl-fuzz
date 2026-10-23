@@ -63,6 +63,11 @@ The gcov build of beanstalkd (`beanstalkd-gcov/`) is created by `run_coverage.sh
 - `prot.c`, `FUZZ_DETERMINISTIC`: `pause-tube <tube> 0` pauses for 1 ns, below the 1 µs clock
   resolution, so the outcome depended on the clock ticking. The fuzzing build always takes the
   "already expired" outcome.
+- `prot.c`, `FUZZ_DETERMINISTIC`: when a waiting `reserve-with-timeout` ends with `DEADLINE_SOON`,
+  its timeout is dropped (as the `TIMED_OUT` branch already does). Left at 0, it armed an empty
+  timer for "now" that fired or not depending on the clock, so `conn_timeout()`/`prottick()`
+  coverage changed between runs. With it, calibration stability is 100% on both 30-minute
+  corpora (was ~98.3–98.7%). Server replies are unchanged. Details: `beanstalkd-fuzzing/stability/`.
 
 **AFLNet** (`aflnet-beanstalkd.patch`):
 - `-P BEANSTALKD`: request splitter (a `put` keeps its job body) and reply-code parser (states).
@@ -137,29 +142,30 @@ Both runs at the same time (one CPU core each, ports 11301/11302), single instan
 
 ```bash
 ./run_mutation_comparison.sh
-./run_coverage.sh out/cmp-default-new cov/cmp-default
-./run_coverage.sh out/cmp-custom-new  cov/cmp-custom
+./run_coverage.sh out/cmp-default-new-1 cov/cmp-default
+./run_coverage.sh out/cmp-custom-new-1  cov/cmp-custom
 ```
 
-Results (one 30-minute run per mode):
+Results (one 30-minute run per mode; runs `out/cmp-*-new-1`, made with the stability fix in
+`beanstalkd-fuzz.patch`, see `beanstalkd-fuzzing/stability/`):
 
 | Metric                                 | Seeds only (no fuzzing) |     Default mutations | Default + custom mutator |
 |----------------------------------------|------------------------:|----------------------:|-------------------------:|
-| Executions                             |                       — |             2 416 112 |                2 088 893 |
-| Average speed, execs/s                 |                       — |                 1 342 |                    1 160 |
-| Paths in queue (`paths_total`)         |                       9 |                 1 121 |            1 186 (+5.8%) |
-| Paths found by custom mutations        |                       — |                     — |       510 (of 1 177 new) |
-| Executions with custom mutations       |                       — |                     — |        1 374 870 (65.8%) |
-| Map coverage after 1 / 10 / 30 min     |                       — | 0.93% / 0.96% / 0.97% |    0.97% / 0.97% / 0.97% |
-| Paths after 1 / 10 / 30 min            |                       — |   809 / 1 043 / 1 121 |      874 / 1 127 / 1 186 |
-| Stability                              |                       — |                97.16% |                   98.28% |
+| Executions                             |                       — |             2 259 469 |                1 729 535 |
+| Average speed, execs/s                 |                       — |                 1 255 |                      961 |
+| Paths in queue (`paths_total`)         |                       9 |                 1 020 |           1 174 (+15.1%) |
+| Paths found by custom mutations        |                       — |                     — |       453 (of 1 165 new) |
+| Executions with custom mutations       |                       — |                     — |        1 137 840 (65.8%) |
+| Map coverage after 1 / 10 / 30 min     |                       — | 0.95% / 0.96% / 0.97% |    0.96% / 0.97% / 0.97% |
+| Paths after 1 / 10 / 30 min            |                       — |     745 / 937 / 1 020 |      894 / 1 113 / 1 174 |
+| Stability                              |                       — |                97.78% |                   98.90% |
 | Sessions cut short (`cut_sessions`)    |                       — |                     0 |                        0 |
 | Crashes / hangs                        |                       — |                 0 / 0 |                    0 / 0 |
-| Lines (all files)                      |    54.3% (1342 of 2470) |  61.7% (1524 of 2470) |     61.9% (1528 of 2470) |
+| Lines (all files)                      |    54.3% (1342 of 2471) |  61.9% (1529 of 2471) |     61.9% (1529 of 2471) |
 | Functions (all files)                  |      72.9% (132 of 181) |    75.7% (137 of 181) |       75.7% (137 of 181) |
-| Branches (all files)                   |     46.0% (589 of 1281) |   57.4% (735 of 1281) |      57.6% (738 of 1281) |
-| Lines / branches without binlog code\* |           68.0% / 57.1% |         77.4% / 71.3% |            77.6% / 71.6% |
-| `prot.c` lines / branches              |           70.6% / 61.6% |         84.5% / 80.5% |            84.9% / 81.0% |
+| Branches (all files)                   |     46.0% (589 of 1281) |   57.5% (736 of 1281) |      57.5% (736 of 1281) |
+| Lines / branches without binlog code\* |           68.0% / 57.1% |         77.6% / 71.4% |            77.6% / 71.4% |
+| `prot.c` lines / branches              |           70.5% / 61.6% |         84.9% / 80.7% |            84.9% / 80.7% |
 
 ## 5. Coverage (LCOV HTML)
 
@@ -182,18 +188,20 @@ code `prot.c` is covered to ~85% lines / ~81% branches.
 ./build_targets.sh
 ```
 
-The whole corpus of both 30-minute runs was replayed against both
-builds, each session on a fresh server:
+The whole corpus of both 30-minute runs (`out/cmp-*-new-1`) was replayed against both builds
+(made with the current `beanstalkd-fuzz.patch`, including the stability fix), each session on a
+fresh server. The loops print every abnormal exit and, at the end, the number of sanitizer
+reports in the servers' stderr (both 0):
 
 ```bash
 # ASan + UBSan
-( for f in out/cmp-*-new/replayable-queue/*; do echo "== $f"; targets/asan-ubsan/beanstalkd -p 11500 -l 127.0.0.1 -z 1024 & sleep 0.05; ./aflnet/aflnet-replay "$f" BEANSTALKD 11500 1 > /dev/null 2>&1; wait; done )
+( for f in out/cmp-*-new-1/replayable-queue/*; do targets/asan-ubsan/beanstalkd -p 11500 -l 127.0.0.1 -z 1024 2>> out/asan-ubsan.log & sleep 0.05; ./aflnet/aflnet-replay "$f" BEANSTALKD 11500 1 > /dev/null 2>&1; wait $! || echo "abnormal exit: $f"; done; grep -cE 'ERROR: AddressSanitizer|runtime error' out/asan-ubsan.log )
 
 # MSan
-( for f in out/cmp-*-new/replayable-queue/*; do echo "== $f"; targets/msan/beanstalkd -p 11500 -l 127.0.0.1 -z 1024 & sleep 0.05; ./aflnet/aflnet-replay "$f" BEANSTALKD 11500 1 > /dev/null 2>&1; wait; done )
+( for f in out/cmp-*-new-1/replayable-queue/*; do targets/msan/beanstalkd -p 11500 -l 127.0.0.1 -z 1024 2>> out/msan.log & sleep 0.05; ./aflnet/aflnet-replay "$f" BEANSTALKD 11500 1 > /dev/null 2>&1; wait $! || echo "abnormal exit: $f"; done; grep -cE 'MemorySanitizer' out/msan.log )
 ```
 
 |        Build | Sessions replayed | Sanitizer reports / abnormal exits |
 |--------------|-------------------|------------------------------------|
-| ASan + UBSan |             2 307 |                                  0 |
-| MSan         |             2 307 |                                  0 |
+| ASan + UBSan |             2 194 |                                  0 |
+| MSan         |             2 194 |                                  0 |

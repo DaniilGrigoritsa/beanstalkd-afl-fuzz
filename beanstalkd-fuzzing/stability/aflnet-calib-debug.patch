@@ -1,0 +1,60 @@
+Debug addition for AFLNet, for finding rare instability (not used for fuzzing).
+Apply on top of ../patches/aflnet-beanstalkd.patch, in a separate copy of AFLNet:
+
+  cp -r aflnet out/stability/aflnet-dbg
+  git -C out/stability/aflnet-dbg apply $PWD/beanstalkd-fuzzing/stability/aflnet-calib-debug.patch
+  AFL_NO_X86=1 make -C out/stability/aflnet-dbg afl-fuzz
+
+With CALIB_DEBUG_DIR=<dir> set, every time calibration sees a run whose coverage differs from the
+input's first run, it writes <dir>/var-<pid>-<n>: the input, the run number, the fork server pid and
+the global execution numbers of both runs (for rare_events.py), both runs' server replies and the
+differing coverage map bytes.
+
+diff --git a/afl-fuzz.c b/afl-fuzz.c
+--- a/afl-fuzz.c
++++ b/afl-fuzz.c
+@@ -3596,6 +3596,44 @@
+ 
+     }
+ 
++    //CALIB_DEBUG_DIR: when a run's trace differs from the first one, save both runs' replies
++    {
++      static u8 *first_resp; static u32 first_resp_len, first_msgs, first_lr, first_st, first_cut;
++      static u64 first_exec;
++      if (stage_cur == 0) {
++        first_exec = total_execs;
++        first_resp = ck_realloc(first_resp, response_buf_size + 1);
++        memcpy(first_resp, response_buf, response_buf_size);
++        first_resp_len = response_buf_size; first_msgs = messages_sent;
++        first_lr = net_late_replies; first_st = net_stalled_sessions; first_cut = net_cut_sessions;
++      } else if (getenv("CALIB_DEBUG_DIR") && memcmp(first_trace, trace_bits, MAP_SIZE)) {
++        static u32 n;
++        u8 *fn = alloc_printf("%s/var-%d-%04u", getenv("CALIB_DEBUG_DIR"), getpid(), n++);
++        FILE *f = fopen(fn, "w");
++        if (f) {
++          u32 i, diff = 0;
++          fprintf(f, "input %s\nrun %u of %u\nmessages sent: first %u, this %u\n", q->fname, stage_cur,
++                  stage_max, first_msgs, messages_sent);
++          fprintf(f, "forkserver %d\nexecution: first %llu, this %llu\n", forksrv_pid,
++                  (unsigned long long)first_exec, (unsigned long long)total_execs);
++          fprintf(f, "late/stalled/cut so far: first run %u/%u/%u, now %llu/%llu/%llu\n", first_lr, first_st,
++                  first_cut, net_late_replies, net_stalled_sessions, net_cut_sessions);
++          fprintf(f, "replies: first %u bytes, this %u bytes, equal: %d\n", first_resp_len, response_buf_size,
++                  first_resp_len == response_buf_size && !memcmp(first_resp, response_buf, first_resp_len));
++          for (i = 0; i < MAP_SIZE; i++) if (first_trace[i] != trace_bits[i]) {
++            if (diff++ < 64) fprintf(f, "map[%u]: first %u, this %u\n", i, first_trace[i], trace_bits[i]);
++          }
++          fprintf(f, "differing map bytes: %u\n", diff);
++          fclose(f);
++          u8 *fr = alloc_printf("%s.first.resp", fn), *tr = alloc_printf("%s.this.resp", fn);
++          f = fopen(fr, "w"); if (f) { fwrite(first_resp, 1, first_resp_len, f); fclose(f); }
++          f = fopen(tr, "w"); if (f) { fwrite(response_buf, 1, response_buf_size, f); fclose(f); }
++          ck_free(fr); ck_free(tr);
++        }
++        ck_free(fn);
++      }
++    }
++
+   }
+ 
+   stop_us = get_cur_time_us();
